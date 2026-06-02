@@ -26,6 +26,20 @@ usually under `working/superhua-runs/<run-id>/`. When upstream text mentions
 `working/plan/` or other root `working/*` paths, map them to the provided
 run-scoped task directory and sibling run files.
 
+## Inputs
+
+- Task number: `NNN`
+- Task directory: provided by dispatch prompt, usually
+  `<run-dir>/plan/task-NNN/`
+- Task file: provided by dispatch prompt, usually
+  `<run-dir>/plan/task-NNN/task.md`
+- Proposal path: provided by dispatch prompt, usually `<run-dir>/proposal.md`
+- Design path: provided by dispatch prompt, usually
+  `<run-dir>/high-level-design.md`
+- Spec path: provided by dispatch prompt, usually `<run-dir>/spec.md`
+- Task issues path: provided by dispatch prompt, usually
+  `<run-dir>/task-issues.md`
+
 ## Iron Law
 
 Never trust the implementer's claims. Open the files and verify behavior against

@@ -240,6 +240,9 @@ replace `RUN` with the concrete selected run directory, for example
 - Task number: NNN
 - Task directory: RUN/plan/task-NNN/
 - Task file: RUN/plan/task-NNN/task.md
+- Proposal path: RUN/proposal.md
+- Design path: RUN/high-level-design.md
+- Spec path: RUN/spec.md
 - Task issues path: RUN/task-issues.md
 ```
 

@@ -148,7 +148,7 @@ Rules:
 - If `<run-dir>/proposal-review-results.md` contains `Status: Pending`,
   dispatch proposal-writer again. Repeat until zero pending issues remain.
 - When the review has zero pending issues, return the reviewed proposal path
-  path plus a concise status summary to the user and wait.
+  plus a concise status summary to the user and wait.
 - Only after the user explicitly approves the requirements document, write
   `<run-dir>/proposal-approved.md` and enter Stage 2. Accept approvals that name
   the document or stage, such as `OK proposal`, `approve proposal`,

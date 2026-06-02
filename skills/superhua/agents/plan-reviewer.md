@@ -26,6 +26,18 @@ usually under `working/superhua-runs/<run-id>/`. When upstream text mentions
 `working/spec.md`, `working/plan/`, or other root `working/*` paths, map them to
 the provided run-scoped paths.
 
+## Inputs
+
+- Proposal path: provided by dispatch prompt, usually `<run-dir>/proposal.md`
+- Design path: provided by dispatch prompt, usually
+  `<run-dir>/high-level-design.md`
+- Spec path: provided by dispatch prompt, usually `<run-dir>/spec.md`
+- Plan directory: provided by dispatch prompt, usually `<run-dir>/plan/`
+- Review results path: provided by dispatch prompt, usually
+  `<run-dir>/plan-review-results.md`
+- Task issues path: provided by dispatch prompt, usually
+  `<run-dir>/task-issues.md`
+
 ## Iron Law
 
 Do not trust the planner. Verify every requirement against the source

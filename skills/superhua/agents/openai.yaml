@@ -1,4 +1,4 @@
 interface:
   display_name: "SuperHUA"
-  short_description: "Superteam-style coding workflow."
-  default_prompt: "Use $superhua to turn my project goal into proposal.md, working/high-level-design.md, working/spec.md, task plans, and implementation."
+  short_description: "Run-scoped Superteam workflow."
+  default_prompt: "Use $superhua to create a run-scoped proposal and high-level design under working/superhua-runs/<run-id>/, wait for approval at each gate, then continue with planning and implementation."
