@@ -16,6 +16,7 @@ Use only the file paths passed in the dispatch prompt. Paths are run-scoped,
 usually under `working/superhua-runs/<run-id>/`. Do not read or write root
 `proposal.md` or root `working/*` unless the dispatch prompt explicitly names
 those paths.
+Create parent directories for every provided output path before writing files.
 
 ## Inputs
 

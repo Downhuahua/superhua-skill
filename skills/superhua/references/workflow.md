@@ -108,6 +108,31 @@ history. The fresh agent must read files from disk. In the templates below,
 replace `RUN` with the concrete selected run directory, for example
 `working/superhua-runs/20260602-1430-3-2-refactor`.
 
+Before dispatching an agent, the controller creates parent directories for every
+run-scoped output path in that agent's prompt. The dispatched agent must also
+create parent directories before writing its outputs.
+
+## Dispatch Mechanics
+
+A request to use or continue SuperHUA authorizes dispatching the named
+SuperHUA role agents. If the current user request does not explicitly authorize
+SuperHUA, child agents, subagents, or delegated agent work, stop and ask for
+confirmation before dispatching.
+
+Dispatch means:
+
+- Use the available subagent or multi-agent facility for one fresh agent per
+  role invocation.
+- Pass only the exact prompt format below.
+- Do not add chat summaries, advice, inferred requirements, or hidden context.
+- Do not reuse the same child agent across different roles or stages.
+- Wait for required output files, then inspect files rather than chat text.
+- Run writer/reviewer loops serially.
+- Run `spec-reviewer` and `code-reviewer` serially because they share
+  `RUN/plan/task-NNN/implement-review-results.md`.
+- Do not parallelize SuperHUA role agents unless the workflow explicitly says a
+  pair is independent. The default is serial execution.
+
 ### proposal-writer
 
 ```text
@@ -381,8 +406,8 @@ NEVER:
 - Treat a generic "continue" as approval for proposal or high-level design.
 - Treat stale approval markers as valid after the document or review file has
   changed.
-- Dispatch spec-reviewer and code-reviewer in parallel; they share one output
-  file and must run serially.
+- Run spec-reviewer and code-reviewer in parallel; they share one output file
+  and must run serially.
 - Start a fourth full implementation review cycle for the same task without
   explicit user approval.
 
@@ -455,28 +480,31 @@ NEVER:
 ### Stage 6: Execute Prompt
 
 1. Require `RUN/doc/prompt.md` and zero pending prompt review issues.
-2. Dispatch spec-writer if `RUN/spec.md` is missing or stale relative to any
+2. Treat `RUN/doc/prompt.md` as the Stage 6 execution charter. `spec-writer`,
+   `planner`, `implementer`, `spec-reviewer`, and `code-reviewer` must read and
+   preserve its execution rules.
+3. Dispatch spec-writer if `RUN/spec.md` is missing or stale relative to any
    Stage 1-5 deliverable.
-3. Dispatch planner.
-4. Dispatch plan-reviewer.
-5. Count `Status: Pending` in `RUN/plan-review-results.md`.
-6. Repeat planner/plan-reviewer until zero pending issues or three cycles.
-7. If pending issues remain after three cycles, write
+4. Dispatch planner.
+5. Dispatch plan-reviewer.
+6. Count `Status: Pending` in `RUN/plan-review-results.md`.
+7. Repeat planner/plan-reviewer until zero pending issues or three cycles.
+8. If pending issues remain after three cycles, write
    `RUN/execution-budget.md` and stop.
-8. Count internal tasks matching `RUN/plan/task-NNN/task.md`.
-9. If the task count is greater than six, write `RUN/execution-budget.md` and
+9. Count internal tasks matching `RUN/plan/task-NNN/task.md`.
+10. If the task count is greater than six, write `RUN/execution-budget.md` and
    wait for explicit `OK long run`; then write `RUN/execution-approved.md`.
-10. Execute each internal task in numeric order with implementer.
-11. Require `RUN/plan/task-NNN/test-results.md` and
+11. Execute each internal task in numeric order with implementer.
+12. Require `RUN/plan/task-NNN/test-results.md` and
     `RUN/plan/task-NNN/changes.md`.
-12. If test status is not `EXPECTED`, retry implementer within the three-cycle
+13. If test status is not `EXPECTED`, retry implementer within the three-cycle
     task budget or write `RUN/plan/task-NNN/loop-issues.md`.
-13. Dispatch spec-reviewer, then code-reviewer, serially.
-14. Count `Status: Pending` in
+14. Dispatch spec-reviewer, then code-reviewer, serially.
+15. Count `Status: Pending` in
     `RUN/plan/task-NNN/implement-review-results.md`.
-15. Retry implementer/reviewers until zero pending issues or the three-cycle
+16. Retry implementer/reviewers until zero pending issues or the three-cycle
     task budget is exceeded.
-16. After the last task, write `RUN/commit-message.md` and
+17. After the last task, write `RUN/commit-message.md` and
     `RUN/task-summary.md` through the controller using only file outputs.
 
 ## Prompt Contracts

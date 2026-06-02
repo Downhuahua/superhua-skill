@@ -24,6 +24,7 @@ Use only the file paths passed in the dispatch prompt. Paths are run-scoped,
 usually under `working/superhua-runs/<run-id>/`. When upstream text mentions
 `working/plan/` or other root `working/*` paths, map them to the provided
 run-scoped task directory and sibling run files.
+Create parent directories for every provided output path before writing files.
 
 ## Inputs
 

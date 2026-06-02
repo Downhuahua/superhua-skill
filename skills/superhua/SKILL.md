@@ -1,6 +1,6 @@
 ---
 name: superhua
-description: Use when starting or continuing SuperHUA project work with file-backed requirements, design, task, prompt, implementation, review, and verification stages.
+description: Use when the user asks to use SuperHUA/superhua or continue a SuperHUA run in a project workspace.
 ---
 
 # SuperHUA
@@ -68,6 +68,9 @@ The main controller must not write deliverables:
 It may only:
 
 - Select or create run directories.
+- Create required run subdirectories such as `RUN/doc`, `RUN/questions`,
+  `RUN/reviews`, `RUN/approvals`, and `RUN/plan` before dispatching agents that
+  write inside them.
 - Maintain `working/superhua-current.md` and `working/superhua-index.md`.
 - Record the user's original request and answers in `RUN/user-input.md`.
 - Dispatch the next required fresh agent using the exact prompt formats in
@@ -78,6 +81,8 @@ It may only:
 - Write approval marker files only after the user explicitly approves Stage 1
   or Stage 2 in the main conversation.
 - Maintain `RUN/runtime-metrics.md` and runtime guard files.
+- Write `RUN/commit-message.md` and `RUN/task-summary.md` after Stage 6 using
+  only file outputs.
 - Report completion, file paths, metrics, and blockers.
 
 On every state transition, emit this declaration exactly:
@@ -90,10 +95,33 @@ If subagent dispatch is unavailable, stop and say that SuperHUA requires a
 subagent-capable session. Do not perform the same role locally in the main
 window.
 
+## Dispatch Mechanics
+
+A request to use or continue SuperHUA authorizes dispatching the named
+SuperHUA role agents. If the current user request does not explicitly authorize
+SuperHUA, child agents, subagents, or delegated agent work, stop and ask for
+confirmation before dispatching.
+
+Dispatch means:
+
+- Use the available subagent or multi-agent facility for one fresh agent per
+  role invocation.
+- Pass only the exact prompt format from `references/workflow.md`.
+- Do not add chat summaries, advice, inferred requirements, or hidden context.
+- Do not reuse the same child agent across different roles or stages.
+- Wait for the required output files, then inspect files rather than chat text.
+- Run writer/reviewer loops serially.
+- Run `spec-reviewer` and `code-reviewer` serially because they share
+  `RUN/plan/task-NNN/implement-review-results.md`.
+- Do not parallelize SuperHUA role agents unless the workflow explicitly says a
+  pair is independent. The default is serial execution.
+
 NEVER:
 
 - Skip a stage.
 - Combine two stages into one prompt, context, agent call, or output pass.
+- Dispatch a child agent with extra context outside the exact prompt format.
+- Let a child agent write outside its provided run-scoped paths.
 - Treat review success as human approval.
 - Treat a generic "continue" as approval for proposal or high-level design.
 - Check status from chat text. Status comes from files only.
