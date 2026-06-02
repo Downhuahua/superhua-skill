@@ -14,9 +14,11 @@ front-loaded document stages before planning and execution:
 2. High-level design and `working/high-level-design.md`.
 
 These are two separate stages. They must never be collapsed into one prompt,
-one agent call, one context, or one output pass. After both documents exist and
-are reviewed, continue automatically: normalize a spec, split tasks, execute
-tasks serially with TDD, review, fix, verify, and produce a task summary.
+one agent call, one context, or one output pass. After each document is created
+and reviewed, the main controller must stop for explicit human approval before
+entering the next stage. After both documents are reviewed and human-approved,
+continue automatically: normalize a spec, split tasks, execute tasks serially
+with TDD, review, fix, verify, and produce a task summary.
 
 ## Main Controller Iron Law
 
@@ -33,6 +35,8 @@ only:
 - Read the exact output files produced by agents.
 - Return agent-written questions to the user.
 - Count `Status: Pending` lines and dispatch the next agent in the flow.
+- Write approval marker files only after the user explicitly approves the
+  current document in the main conversation.
 - Report completion, file paths, metrics, and blockers.
 
 On every state transition, emit this declaration exactly:
@@ -60,11 +64,25 @@ NEVER:
 Run this check first from the project root:
 
 - Missing `proposal.md`: enter Stage 1.
-- `proposal.md` exists, missing `working/high-level-design.md`: enter Stage 2.
-- Both documents exist but either review file is missing or has
-  `Status: Pending`: run the missing or pending review loop first.
-- Both documents exist and both reviews have zero pending issues: enter Stage 3
-  through `agents/spec-writer.md`, then continue through Stage 4 automatically.
+- `proposal.md` exists but `working/proposal-review-results.md` is missing or
+  has `Status: Pending`: run the proposal review loop first.
+- Reviewed `proposal.md` exists but `working/proposal-approved.md` is missing:
+  return the reviewed proposal path and wait for explicit user approval. Do not
+  enter Stage 2.
+- Approved `proposal.md` exists but `working/high-level-design.md` is missing:
+  enter Stage 2.
+- `working/high-level-design.md` exists but
+  `working/design-review-results.md` is missing or has `Status: Pending`: run
+  the design review loop first.
+- Reviewed `working/high-level-design.md` exists but
+  `working/design-approved.md` is missing: return the reviewed design path and
+  wait for explicit user approval. Do not enter Stage 3.
+- Both documents exist, both reviews have zero pending issues, and both
+  approval marker files exist: enter Stage 3 through `agents/spec-writer.md`,
+  then continue through Stage 4 automatically.
+
+Do not dispatch `agents/spec-writer.md`, planner, or implementer while either
+approval marker is missing.
 
 If the user explicitly asks to redo a stage, redo only that stage and downstream
 generated files that depend on it.
@@ -89,6 +107,13 @@ Rules:
   exact prompt format.
 - If `working/proposal-review-results.md` contains `Status: Pending`,
   dispatch proposal-writer again. Repeat until zero pending issues remain.
+- When the review has zero pending issues, return the reviewed `proposal.md`
+  path plus a concise status summary to the user and wait.
+- Only after the user explicitly approves the requirements document, write
+  `working/proposal-approved.md` and enter Stage 2. Accept approvals that name
+  the document or stage, such as `OK proposal`, `approve proposal`,
+  `确认需求文档`, or `需求文档确认`. Do not treat a generic "continue" as
+  approval.
 - Do not guess the user's intent. Do not create a high-level design in this
   stage.
 
@@ -113,7 +138,8 @@ subagent-driven. The goal is a design document at
 
 Rules:
 
-- Stage 2 must start only after Stage 1 is reviewed and `proposal.md` exists.
+- Stage 2 must start only after Stage 1 is reviewed, `proposal.md` exists, and
+  `working/proposal-approved.md` exists.
 - The main controller dispatches `agents/design-writer.md` using the exact
   prompt format in `references/workflow.md`.
 - If design-affecting ambiguity remains, design-writer writes
@@ -126,6 +152,13 @@ Rules:
   `agents/design-reviewer.md` using the exact prompt format.
 - If `working/design-review-results.md` contains `Status: Pending`, dispatch
   design-writer again. Repeat until zero pending issues remain.
+- When the review has zero pending issues, return the reviewed
+  `working/high-level-design.md` path plus a concise status summary to the user
+  and wait.
+- Only after the user explicitly approves the design document, write
+  `working/design-approved.md` and enter Stage 3. Accept approvals that name the
+  document or stage, such as `OK design`, `approve design`, `确认概要设计`, or
+  `概要设计确认`. Do not treat a generic "continue" as approval.
 - Do not guess the user's intent. Do not plan implementation tasks in this
   stage.
 
@@ -143,7 +176,8 @@ Rules:
 
 ## Stage 3: Planning
 
-This stage is hands-off once Stage 1 and Stage 2 are complete.
+This stage is hands-off only after Stage 1 and Stage 2 are reviewed and
+human-approved.
 
 Dispatch `agents/spec-writer.md` to create `working/spec.md` from
 `proposal.md` and `working/high-level-design.md` if it does not exist or is
@@ -220,6 +254,8 @@ Only these SuperHUA overrides apply:
 
 - Insert Stage 1 proposal and Stage 2 high-level design before upstream
   `working/spec.md`.
+- Require explicit human approval marker files after proposal review and design
+  review before any `working/spec.md`, planning, or execution work.
 - Use `agents/spec-writer.md` to synthesize upstream-compatible
   `working/spec.md`.
 - Use `working/task-issues.md`; do not use `working/plan-issues.md`.

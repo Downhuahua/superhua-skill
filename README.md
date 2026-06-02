@@ -14,8 +14,10 @@ skills/superhua/
 [abadcafe/superteam](https://github.com/abadcafe/superteam). It inserts two
 front-loaded gates before the upstream Superteam planning and execution flow:
 
-1. `proposal.md` through a proposal writer and reviewer.
-2. `working/high-level-design.md` through a design writer and reviewer.
+1. `proposal.md` through a proposal writer, reviewer, and explicit user
+   approval.
+2. `working/high-level-design.md` through a design writer, reviewer, and
+   explicit user approval.
 3. `working/spec.md` through `spec-writer`, then the original Superteam-style
    planning and executing chain.
 
@@ -62,13 +64,16 @@ Input:
 Output:
 Create proposal.md first.
 Then create working/high-level-design.md.
-After both are reviewed, continue automatically through working/spec.md,
-task planning, TDD implementation, review, testing, and summary.
+After proposal.md is reviewed, stop and wait for my explicit approval before
+design.
+After working/high-level-design.md is reviewed, stop and wait for my explicit
+approval before spec, planning, implementation, review, testing, and summary.
 
 Rules:
 Ask me questions for unclear requirements or design choices.
 Do not guess my intent.
 Do not merge proposal and high-level design into one step.
+Do not treat reviewer success or a generic "continue" as approval.
 ```
 
 ## Validate
