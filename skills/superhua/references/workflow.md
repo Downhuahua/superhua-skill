@@ -38,9 +38,15 @@ Human-facing gates:
 - `working/design-review-results.md`: high-level design review issues.
 - `working/design-approved.md`: controller-written marker created only after
   the user explicitly approves the reviewed `working/high-level-design.md`.
+- `working/execution-budget.md`: controller-written summary when the reviewed
+  plan exceeds the default unattended execution budget.
+- `working/execution-approved.md`: controller-written marker created only after
+  the user explicitly approves a large or long-running execution.
 
 Automation state:
 
+- `working/runtime-metrics.md`: controller-maintained dispatch counts,
+  per-task review cycle counts, and wall-clock timestamps.
 - `working/spec.md`: normalized implementation spec derived from proposal and
   design.
 - `working/plan/task-NNN/task.md`: one executable task.
@@ -53,6 +59,8 @@ Automation state:
   interactive gates.
 - `working/task-issues.md`: ambiguities in task files.
 - `working/env-issues.md`: environment blockers after three real attempts.
+- `working/plan/task-NNN/loop-issues.md`: repeated-review loop blocker after
+  three full implementation review cycles for one task.
 - `working/commit-message.md`: suggested conventional commit message.
 - `working/task-summary.md`: final task summary and unresolved assumptions.
 
@@ -199,12 +207,19 @@ NEVER:
 - Skip any step of the process flow.
 - Combine steps of the process flow.
 - Reorder stages or review loops.
-- Stop iterating because it is taking too long.
+- Stop merely because it is taking too long, without one of the runtime guard
+  conditions below.
 - Fix, verify, review, plan, design, or implement in the main window.
 - Add extra content to agent prompts beyond the exact prompt formats above.
 - Interpret an agent response. Read status from files only.
 - Treat agent review success as human approval.
 - Treat a generic "continue" as approval for proposal or design.
+- Treat stale approval markers as valid after the document or review file has
+  changed.
+- Dispatch spec-reviewer and code-reviewer in parallel; they share one output
+  file and must run serially.
+- Start a fourth full review cycle for the same task without explicit user
+  approval.
 
 ```mermaid
 flowchart TD
@@ -234,9 +249,14 @@ flowchart TD
   mark_design_approved["Write working/design-approved.md"]
   write_spec["Dispatch spec-writer"]
   plan["Run upstream planning into working/plan/"]
-  review_plan["Review plan until no Pending issues"]
+  review_plan["Review plan until no Pending issues or budget trip"]
+  execution_budget{"Plan within unattended budget or execution-approved exists?"}
+  request_execution_approval["Write execution-budget.md and wait for OK long run"]
+  mark_execution_approved["Write working/execution-approved.md"]
   execute["Execute each task with TDD"]
-  review_impl["Spec and code review until no Pending issues"]
+  task_cycle_budget{"Task full review cycles <= 3?"}
+  write_loop_issue["Write task loop-issues.md and wait"]
+  review_impl["Spec and code review until no Pending issues or budget trip"]
   summary["Write commit-message.md and task-summary.md"]
 
   start --> proposal
@@ -275,8 +295,14 @@ flowchart TD
   design_approved -->|"yes"| write_spec
   write_spec --> plan
   plan --> review_plan
-  review_plan --> execute
-  execute --> review_impl
+  review_plan --> execution_budget
+  execution_budget -->|"no"| request_execution_approval
+  request_execution_approval --> mark_execution_approved
+  mark_execution_approved --> execute
+  execution_budget -->|"yes"| execute
+  execute --> task_cycle_budget
+  task_cycle_budget -->|"no"| write_loop_issue
+  task_cycle_budget -->|"yes"| review_impl
   review_impl --> execute
   review_impl -->|"all tasks done"| summary
 ```
@@ -295,9 +321,11 @@ flowchart TD
 6. ONLY count `Status: Pending` in `working/proposal-review-results.md`.
 7. If count is greater than zero, dispatch proposal-writer again. Repeat writer
    then reviewer until the count is zero.
-8. If count is zero, ONLY run a file existence check for
+8. If count is zero, ONLY run file existence and modified-time checks for
+   `proposal.md`, `working/proposal-review-results.md`, and
    `working/proposal-approved.md`.
-9. If `working/proposal-approved.md` is missing, return the reviewed
+9. If `working/proposal-approved.md` is missing or older than either
+   `proposal.md` or `working/proposal-review-results.md`, return the reviewed
    `proposal.md` path and the zero-pending review status to the user, then
    wait. Do not dispatch design-writer.
 10. Only when the user explicitly approves the requirements document in the
@@ -311,8 +339,10 @@ flowchart TD
    `working/proposal-review-results.md`.
 2. ONLY count `Status: Pending` in `working/proposal-review-results.md`; Stage
    2 cannot start while the count is greater than zero.
-3. ONLY run a file existence check for `working/proposal-approved.md`; Stage 2
-   cannot start while it is missing.
+3. ONLY run file existence and modified-time checks for
+   `working/proposal-approved.md`, `proposal.md`, and
+   `working/proposal-review-results.md`; Stage 2 cannot start while approval is
+   missing or stale.
 4. Dispatch design-writer with the exact prompt format.
 5. ONLY run file existence checks for `working/design-questions.md` and
    `working/high-level-design.md`.
@@ -323,11 +353,14 @@ flowchart TD
 8. ONLY count `Status: Pending` in `working/design-review-results.md`.
 9. If count is greater than zero, dispatch design-writer again. Repeat writer
    then reviewer until the count is zero.
-10. If count is zero, ONLY run a file existence check for
+10. If count is zero, ONLY run file existence and modified-time checks for
+    `working/high-level-design.md`, `working/design-review-results.md`, and
     `working/design-approved.md`.
-11. If `working/design-approved.md` is missing, return the reviewed
-    `working/high-level-design.md` path and the zero-pending review status to
-    the user, then wait. Do not dispatch spec-writer, planner, or implementer.
+11. If `working/design-approved.md` is missing or older than either
+    `working/high-level-design.md` or `working/design-review-results.md`, return
+    the reviewed `working/high-level-design.md` path and the zero-pending review
+    status to the user, then wait. Do not dispatch spec-writer, planner, or
+    implementer.
 12. Only when the user explicitly approves the design document in the main
     conversation, write `working/design-approved.md`. The user must name the
     document or stage, for example `OK design`, `approve design`,
@@ -344,9 +377,11 @@ flowchart TD
    with the exact prompt format.
 4. ONLY count `Status: Pending` in both review files; Stage 3 cannot start
    while either count is greater than zero.
-5. ONLY run file existence checks for `working/proposal-approved.md` and
-   `working/design-approved.md`; Stage 3 cannot start while either marker is
-   missing.
+5. ONLY run file existence and modified-time checks for
+   `working/proposal-approved.md`, `proposal.md`,
+   `working/proposal-review-results.md`, `working/design-approved.md`,
+   `working/high-level-design.md`, and `working/design-review-results.md`;
+   Stage 3 cannot start while either marker is missing or stale.
 6. ONLY run a file existence check for `working/spec.md`.
 7. If missing or stale relative to `proposal.md` or
    `working/high-level-design.md`, dispatch spec-writer with the exact prompt
@@ -356,25 +391,47 @@ flowchart TD
 10. Dispatch plan-reviewer with the exact prompt format.
 11. ONLY count `Status: Pending` in `working/plan-review-results.md`.
 12. If count is greater than zero, dispatch planner again, then plan-reviewer
-   again. Repeat until the count is zero.
+   again. Repeat until the count is zero or three planner/plan-reviewer cycles
+   have completed.
+13. If three planner/plan-reviewer cycles complete and pending issues remain,
+   write `working/execution-budget.md` with the plan-review pending count and
+   stop for the user.
+14. If count is zero, ONLY count task files matching
+   `working/plan/task-NNN/task.md`.
+15. If the task count is greater than six, write `working/execution-budget.md`
+   with the task count and ask for explicit long-run approval. Do not enter
+   Stage 4 until `working/execution-approved.md` exists and is newer than
+   `working/plan-review-results.md`.
 
 ## Stage 4 Exact File Checks
 
 1. ONLY list tasks from `working/plan/task-NNN/task.md`.
-2. For each task in numeric order, dispatch implementer with the exact prompt
+2. ONLY check `working/execution-budget.md` and
+   `working/execution-approved.md`. If the reviewed plan exceeds the unattended
+   budget and approval is missing or stale, stop and return
+   `working/execution-budget.md`.
+3. For each task in numeric order, update `working/runtime-metrics.md` and
+   dispatch implementer with the exact prompt
    format.
-3. ONLY run file existence checks for
+4. ONLY run file existence checks for
    `working/plan/task-NNN/test-results.md` and
    `working/plan/task-NNN/changes.md`.
-4. ONLY read the status line in `working/plan/task-NNN/test-results.md`.
-5. If status is not `EXPECTED`, dispatch implementer again.
-6. If status is `EXPECTED`, dispatch spec-reviewer and code-reviewer with the
-   exact prompt formats.
-7. ONLY count `Status: Pending` in
+5. ONLY read the status line in `working/plan/task-NNN/test-results.md`.
+6. If status is not `EXPECTED`, update `working/runtime-metrics.md`. If this is
+   the third full cycle for the task, write
+   `working/plan/task-NNN/loop-issues.md` and stop; otherwise dispatch
+   implementer again.
+7. If status is `EXPECTED`, dispatch spec-reviewer with the exact prompt format
+   and wait for completion. Then dispatch code-reviewer with the exact prompt
+   format and wait for completion. Never dispatch these two reviewers in
+   parallel.
+8. ONLY count `Status: Pending` in
    `working/plan/task-NNN/implement-review-results.md`.
-8. If count is greater than zero, dispatch implementer again, then reviewers
-   again. Repeat until the count is zero.
-9. Move to the next numeric task. After the last task, write summary files
+9. If count is greater than zero, update `working/runtime-metrics.md`. If this
+   is the third full implementer -> spec-reviewer -> code-reviewer cycle for the
+   task, write `working/plan/task-NNN/loop-issues.md` and stop; otherwise
+   dispatch implementer again, then reviewers again.
+10. Move to the next numeric task. After the last task, write summary files
    through the controller using only the task files and review files as input.
 
 ## Proposal Prompt Contract
@@ -403,6 +460,8 @@ Accepted approvals: OK proposal, approve proposal, 确认需求文档.
 ```
 
 Do not dispatch design-writer until `working/proposal-approved.md` exists.
+If the marker is older than `proposal.md` or
+`working/proposal-review-results.md`, treat it as missing.
 
 ## Design Prompt Contract
 
@@ -432,6 +491,32 @@ Accepted approvals: OK design, approve design, 确认概要设计.
 
 Do not dispatch spec-writer, planner, or implementer until
 `working/design-approved.md` exists.
+If the marker is older than `working/high-level-design.md` or
+`working/design-review-results.md`, treat it as missing.
+
+## Runtime Budget Contract
+
+SuperHUA is allowed to work unattended, but not to hide runaway execution.
+
+Default unattended budget:
+
+- No more than three planner/plan-reviewer cycles.
+- No more than six task files before Stage 4 starts.
+- No more than three full implementer -> spec-reviewer -> code-reviewer cycles
+  for the same task.
+
+When a budget is exceeded, the controller writes the relevant guard file and
+waits:
+
+```text
+working/execution-budget.md
+working/plan/task-NNN/loop-issues.md
+```
+
+Large-plan execution resumes only after explicit approval such as
+`OK long run`; the controller then writes `working/execution-approved.md`.
+Repeated-review loops do not auto-resume. The user must inspect the loop issue
+and explicitly direct the next action.
 
 ## Automation Policy
 
@@ -439,6 +524,9 @@ After reviewed and human-approved proposal and design documents exist, continue
 without extra confirmations unless:
 
 - The next step would change user intent.
+- The reviewed plan exceeds the unattended execution budget.
+- A task reaches three full implementation review cycles and still has pending
+  issues.
 - A requirement is contradictory and cannot be handled by a recorded assumption.
 - An environment blocker remains after three distinct executed attempts.
 - A credential, token, paid service action, or destructive operation is needed.

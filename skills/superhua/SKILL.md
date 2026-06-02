@@ -37,6 +37,8 @@ only:
 - Count `Status: Pending` lines and dispatch the next agent in the flow.
 - Write approval marker files only after the user explicitly approves the
   current document in the main conversation.
+- Maintain `working/runtime-metrics.md` and runtime guard files when execution
+  exceeds the unattended budget.
 - Report completion, file paths, metrics, and blockers.
 
 On every state transition, emit this declaration exactly:
@@ -66,17 +68,20 @@ Run this check first from the project root:
 - Missing `proposal.md`: enter Stage 1.
 - `proposal.md` exists but `working/proposal-review-results.md` is missing or
   has `Status: Pending`: run the proposal review loop first.
-- Reviewed `proposal.md` exists but `working/proposal-approved.md` is missing:
-  return the reviewed proposal path and wait for explicit user approval. Do not
-  enter Stage 2.
+- Reviewed `proposal.md` exists but `working/proposal-approved.md` is missing
+  or older than `proposal.md` or `working/proposal-review-results.md`: return
+  the reviewed proposal path and wait for explicit user approval. Do not enter
+  Stage 2.
 - Approved `proposal.md` exists but `working/high-level-design.md` is missing:
   enter Stage 2.
 - `working/high-level-design.md` exists but
   `working/design-review-results.md` is missing or has `Status: Pending`: run
   the design review loop first.
 - Reviewed `working/high-level-design.md` exists but
-  `working/design-approved.md` is missing: return the reviewed design path and
-  wait for explicit user approval. Do not enter Stage 3.
+  `working/design-approved.md` is missing or older than
+  `working/high-level-design.md` or `working/design-review-results.md`: return
+  the reviewed design path and wait for explicit user approval. Do not enter
+  Stage 3.
 - Both documents exist, both reviews have zero pending issues, and both
   approval marker files exist: enter Stage 3 through `agents/spec-writer.md`,
   then continue through Stage 4 automatically.
@@ -85,7 +90,8 @@ Do not dispatch `agents/spec-writer.md`, planner, or implementer while either
 approval marker is missing.
 
 If the user explicitly asks to redo a stage, redo only that stage and downstream
-generated files that depend on it.
+generated files that depend on it. Remove stale approval markers and automation
+markers for the redone stage and downstream stages before continuing.
 
 ## Stage 1: Proposal
 
@@ -192,6 +198,17 @@ must follow the complete upstream Superteam contracts preserved under
 `references/workflow.md`. Iterate until `working/plan-review-results.md` has
 zero `Status: Pending` issues.
 
+Default unattended planning budget:
+
+- Maximum three planner/plan-reviewer cycles.
+- Maximum six task files before execution starts.
+
+If either budget is exceeded, stop before execution, write
+`working/execution-budget.md`, and ask the user for explicit long-run approval
+such as `OK long run`. Do not enter Stage 4 for large plans until
+`working/execution-approved.md` exists and is newer than
+`working/plan-review-results.md`.
+
 Dispatch fresh agents using the prompt files. If subagent dispatch is
 unavailable, stop and report that SuperHUA cannot run in this session.
 
@@ -204,13 +221,22 @@ Execute tasks serially. For each task:
 1. Run the implementer role.
 2. Require TDD: failing tests first, minimal implementation, passing tests.
 3. Run project tests and coverage checks. Code changes must keep coverage at least 80% unless the user explicitly changes that project rule.
-4. Run spec-reviewer and code-reviewer roles.
+4. Run spec-reviewer and code-reviewer roles serially, never in parallel,
+   because both write `implement-review-results.md`.
 5. Fix every `Status: Pending` issue and review again.
-6. Continue until no pending issues remain.
+6. Continue until no pending issues remain, within the runtime budget below.
+
+Default unattended execution budget:
+
+- Maximum three full implementer -> spec-reviewer -> code-reviewer cycles per
+  task.
+- After three cycles for the same task, if `Status: Pending` remains, stop,
+  write `working/plan/task-NNN/loop-issues.md`, and return the blocker summary
+  to the user instead of starting a fourth cycle.
 
 Only stop for the user after at least three distinct, actually executed attempts
-fail to resolve an environment or requirement blocker. Record the blocker in the
-proper issue file before stopping.
+fail to resolve an environment, requirement, or repeated-review blocker. Record
+the blocker in the proper issue file before stopping.
 
 Do not create git commits unless the user explicitly asks. Produce
 `working/commit-message.md` and `working/task-summary.md` instead.

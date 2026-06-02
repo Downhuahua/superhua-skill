@@ -55,6 +55,11 @@ Append code issues only under `## Code Review Issues`:
 - Decision Reason:
 ```
 
+If `implement-review-results.md` already exists, preserve the entire
+`## Spec Review Issues` section and every existing spec-review issue. Never
+truncate the file. Append or update only code-review issues under
+`## Code Review Issues`.
+
 ## Review Checklist
 
 - Separation of concerns is clear.

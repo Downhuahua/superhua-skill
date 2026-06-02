@@ -19,7 +19,12 @@ front-loaded gates before the upstream Superteam planning and execution flow:
 2. `working/high-level-design.md` through a design writer, reviewer, and
    explicit user approval.
 3. `working/spec.md` through `spec-writer`, then the original Superteam-style
-   planning and executing chain.
+   planning and executing chain with runtime guards.
+
+SuperHUA works unattended after the approved design, but it now stops for a
+runtime checkpoint when a reviewed plan has more than six tasks or when one task
+has already gone through three full implementer/reviewer cycles without
+converging.
 
 The upstream Superteam snapshot is bundled under
 `skills/superhua/references/upstream-superteam/` and pinned to commit:
@@ -74,6 +79,9 @@ Ask me questions for unclear requirements or design choices.
 Do not guess my intent.
 Do not merge proposal and high-level design into one step.
 Do not treat reviewer success or a generic "continue" as approval.
+If the reviewed plan is large, stop before execution and ask for OK long run.
+If one task loops through three implement/review cycles, stop and report the
+loop issue instead of starting a fourth cycle.
 ```
 
 ## Validate

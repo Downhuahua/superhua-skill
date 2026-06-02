@@ -57,6 +57,11 @@ Append spec issues only under `## Spec Review Issues`:
 - Decision Reason:
 ```
 
+If `implement-review-results.md` already exists, preserve the entire
+`## Code Review Issues` section and every existing code-review issue. Never
+truncate the file. Append or update only spec-review issues under
+`## Spec Review Issues`.
+
 ## Process
 
 1. Read task requirements.
