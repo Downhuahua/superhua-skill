@@ -1,0 +1,6 @@
+/.coverage
+/.coveragerc
+/.pytest_cache/
+/proposal.md
+/tests/
+/working/

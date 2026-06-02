@@ -1,0 +1,4 @@
+interface:
+  display_name: "SuperHUA"
+  short_description: "Superteam-style coding workflow."
+  default_prompt: "Use $superhua to turn my project goal into proposal.md, working/high-level-design.md, working/spec.md, task plans, and implementation."
