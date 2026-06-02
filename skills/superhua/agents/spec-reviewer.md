@@ -33,9 +33,13 @@ run-scoped task directory and sibling run files.
   `<run-dir>/plan/task-NNN/`
 - Task file: provided by dispatch prompt, usually
   `<run-dir>/plan/task-NNN/task.md`
-- Proposal path: provided by dispatch prompt, usually `<run-dir>/proposal.md`
+- Proposal path: provided by dispatch prompt, usually
+  `<run-dir>/doc/proposal.md`
 - Design path: provided by dispatch prompt, usually
-  `<run-dir>/high-level-design.md`
+  `<run-dir>/doc/high-level-design.md`
+- Detailed design path: provided by dispatch prompt, usually
+  `<run-dir>/doc/detailed-design.md`
+- Prompt path: provided by dispatch prompt, usually `<run-dir>/doc/prompt.md`
 - Spec path: provided by dispatch prompt, usually `<run-dir>/spec.md`
 - Task issues path: provided by dispatch prompt, usually
   `<run-dir>/task-issues.md`
@@ -95,6 +99,6 @@ Do not flag style-only issues here. This role is about requirement compliance.
 
 ## SuperHUA Overrides
 
-- Verify against the provided proposal, design, and spec paths when task
-  context is insufficient.
+- Verify against the provided proposal, high-level design, detailed design,
+  prompt, and spec paths when task context is insufficient.
 - Use the run-scoped task issues file, not `working/plan-issues.md`.

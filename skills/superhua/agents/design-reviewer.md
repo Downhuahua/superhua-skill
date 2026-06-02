@@ -19,11 +19,12 @@ those paths.
 
 ## Inputs
 
-- Proposal path: provided by dispatch prompt, usually `<run-dir>/proposal.md`
+- Proposal path: provided by dispatch prompt, usually
+  `<run-dir>/doc/proposal.md`
 - Design path: provided by dispatch prompt, usually
-  `<run-dir>/high-level-design.md`
+  `<run-dir>/doc/high-level-design.md`
 - Review results path: provided by dispatch prompt, usually
-  `<run-dir>/design-review-results.md`
+  `<run-dir>/reviews/design-review-results.md`
 
 ## Output
 

@@ -20,15 +20,16 @@ those paths.
 
 ## Inputs
 
-- Proposal path: provided by dispatch prompt, usually `<run-dir>/proposal.md`
+- Proposal path: provided by dispatch prompt, usually
+  `<run-dir>/doc/proposal.md`
 - User input path: provided by dispatch prompt, usually
   `<run-dir>/user-input.md`
 - Design path: provided by dispatch prompt, usually
-  `<run-dir>/high-level-design.md`
+  `<run-dir>/doc/high-level-design.md`
 - Questions path: provided by dispatch prompt, usually
-  `<run-dir>/design-questions.md`
+  `<run-dir>/questions/design-questions.md`
 - Review results path: provided by dispatch prompt, usually
-  `<run-dir>/design-review-results.md`
+  `<run-dir>/reviews/design-review-results.md`
 
 ## Outputs
 

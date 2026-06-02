@@ -111,14 +111,16 @@ result.
    - Run it and verify GREEN.
 4. Run relevant regression tests and coverage. Coverage must stay at least 80%
    unless the project has a stricter rule.
-5. If a test is blocked:
+5. For Python projects, run pytest, mypy, and ruff. If one is not configured,
+   configure it or record the blocker with evidence; do not silently skip it.
+6. If a test or required quality command is blocked:
    - Verify root cause with actual commands.
    - Try at least three distinct fixes.
    - Record remaining blockers in the run-scoped environment issues or task
      issues file.
-6. Set fixed review issue statuses to `Resolved`. For unfixable issues, set
+7. Set fixed review issue statuses to `Resolved`. For unfixable issues, set
    `Don't Fix` and fill `Decision Reason` with attempts and evidence.
-7. Write `changes.md` and `test-results.md`.
+8. Write `changes.md` and `test-results.md`.
 
 ## Constraints
 

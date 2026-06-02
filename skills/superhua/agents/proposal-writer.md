@@ -22,11 +22,12 @@ those paths.
 
 - User input path: provided by dispatch prompt, usually
   `<run-dir>/user-input.md`
-- Proposal path: provided by dispatch prompt, usually `<run-dir>/proposal.md`
+- Proposal path: provided by dispatch prompt, usually
+  `<run-dir>/doc/proposal.md`
 - Questions path: provided by dispatch prompt, usually
-  `<run-dir>/proposal-questions.md`
+  `<run-dir>/questions/proposal-questions.md`
 - Review results path: provided by dispatch prompt, usually
-  `<run-dir>/proposal-review-results.md`
+  `<run-dir>/reviews/proposal-review-results.md`
 
 ## Outputs
 

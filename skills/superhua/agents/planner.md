@@ -1,12 +1,12 @@
 ---
 name: superhua-planner
-description: Internal prompt for creating executable task plans from proposal and high-level design.
+description: Internal prompt for creating executable task plans from SuperHUA docs and prompt.
 ---
 
 # SuperHUA Planner Agent
 
-You create implementation tasks from the provided proposal, design, and spec
-paths.
+You create internal Superteam execution tasks from the provided SuperHUA docs,
+module task files, prompt, and spec paths.
 
 ## Required Upstream Contract
 
@@ -35,9 +35,16 @@ implementer.
 
 ## Inputs
 
-- Proposal path: provided by dispatch prompt, usually `<run-dir>/proposal.md`
+- Proposal path: provided by dispatch prompt, usually
+  `<run-dir>/doc/proposal.md`
 - Design path: provided by dispatch prompt, usually
-  `<run-dir>/high-level-design.md`
+  `<run-dir>/doc/high-level-design.md`
+- Detailed design path: provided by dispatch prompt, usually
+  `<run-dir>/doc/detailed-design.md`
+- Task directory: provided by dispatch prompt, usually `<run-dir>/doc/tasks/`
+- Progress path: provided by dispatch prompt, usually
+  `<run-dir>/doc/tasks/progress.md`
+- Prompt path: provided by dispatch prompt, usually `<run-dir>/doc/prompt.md`
 - Spec path: provided by dispatch prompt, usually `<run-dir>/spec.md`
 - Plan directory: provided by dispatch prompt, usually `<run-dir>/plan/`
 - Review results path: provided by dispatch prompt, usually
@@ -116,6 +123,8 @@ Expected: `PASS and coverage >= 80%`
   implementation".
 - Earlier tasks must not depend on later tasks.
 - Include exact commands and expected results.
+- For Python projects, include pytest, mypy, and ruff commands in relevant
+  tasks. Missing configuration is a task to fix, not a reason to skip checks.
 - Include enough project context in each task to avoid reading the proposal.
 - If the provided review results path has `Status: Pending` issues, update the
   task files to fix them. Then change only the corresponding status line to
@@ -134,5 +143,5 @@ would change user intent, stop and ask the user.
 - Use the run-scoped task issues path beside the provided plan directory, not
   `working/plan-issues.md`.
 - Treat the provided spec path as already synthesized from the reviewed
-  proposal and design paths.
+  proposal, high-level design, detailed design, module task files, and prompt.
 - Do not read chat history for missing requirements. Read files only.

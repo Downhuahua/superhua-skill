@@ -1,4 +1,4 @@
 interface:
   display_name: "SuperHUA"
-  short_description: "Run-scoped Superteam workflow."
-  default_prompt: "Use $superhua to create a run-scoped proposal and high-level design under working/superhua-runs/<run-id>/, wait for approval at each gate, then continue with planning and implementation."
+  short_description: "Run-scoped VibeCoding workflow."
+  default_prompt: "Use $superhua to create a run-scoped proposal, high-level design, detailed design, module tasks, and prompt.md under working/superhua-runs/<run-id>/, then execute the reviewed prompt with pytest, mypy, and ruff checks."

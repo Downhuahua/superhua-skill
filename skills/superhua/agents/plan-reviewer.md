@@ -28,9 +28,16 @@ the provided run-scoped paths.
 
 ## Inputs
 
-- Proposal path: provided by dispatch prompt, usually `<run-dir>/proposal.md`
+- Proposal path: provided by dispatch prompt, usually
+  `<run-dir>/doc/proposal.md`
 - Design path: provided by dispatch prompt, usually
-  `<run-dir>/high-level-design.md`
+  `<run-dir>/doc/high-level-design.md`
+- Detailed design path: provided by dispatch prompt, usually
+  `<run-dir>/doc/detailed-design.md`
+- Task directory: provided by dispatch prompt, usually `<run-dir>/doc/tasks/`
+- Progress path: provided by dispatch prompt, usually
+  `<run-dir>/doc/tasks/progress.md`
+- Prompt path: provided by dispatch prompt, usually `<run-dir>/doc/prompt.md`
 - Spec path: provided by dispatch prompt, usually `<run-dir>/spec.md`
 - Plan directory: provided by dispatch prompt, usually `<run-dir>/plan/`
 - Review results path: provided by dispatch prompt, usually
@@ -90,12 +97,14 @@ Issue status values:
 - Earlier tasks do not depend on later tasks.
 - Commands and expected results are exact.
 - Coverage expectation is present for code tasks and is at least 80%.
+- Python implementation tasks require pytest, mypy, and ruff.
 
 Only flag issues that would cause wrong implementation, blocked execution, weak
 tests, or missed requirements. Do not add stylistic suggestions.
 
 ## SuperHUA Overrides
 
-- Verify plan alignment against the provided proposal, design, and spec paths.
+- Verify plan alignment against the provided proposal, high-level design,
+  detailed design, module tasks, prompt, and spec paths.
 - Use the run-scoped task issues path beside the provided plan directory, not
   `working/plan-issues.md`.

@@ -1,71 +1,83 @@
 ---
 name: superhua
-description: Use when starting or continuing SuperHUA project work with file-backed requirements, design, planning, implementation, review, and verification stages.
+description: Use when starting or continuing SuperHUA project work with file-backed requirements, design, task, prompt, implementation, review, and verification stages.
 ---
 
 # SuperHUA
 
-SuperHUA is a Codex-local adaptation of `abadcafe/superteam`. It keeps the
-state-machine controller, file boundary, fresh-agent execution, review loop,
-and `Status: Pending` convergence model from Superteam, but adds two
-front-loaded document stages before planning and execution. All SuperHUA state
-is run-scoped so one project directory can contain multiple independent
-SuperHUA tasks without overwriting each other.
+SuperHUA is a Codex-local adaptation of `abadcafe/superteam`. It preserves the
+original Superteam state-machine discipline, fresh-agent execution, review
+loops, and `Status: Pending` convergence model, but turns the user's former
+manual VibeCoding preparation flow into a run-scoped automation.
 
-1. Requirements discussion and `<run-dir>/proposal.md`.
-2. High-level design and `<run-dir>/high-level-design.md`.
+The required document chain is:
 
-These are two separate stages. They must never be collapsed into one prompt,
-one agent call, one context, or one output pass. After each document is created
-and reviewed, the main controller must stop for explicit human approval before
-entering the next stage. After both documents are reviewed and human-approved,
-continue automatically: normalize a spec, split tasks, execute tasks serially
-with TDD, review, fix, verify, and produce a task summary.
+1. `RUN/doc/proposal.md`
+2. `RUN/doc/high-level-design.md`
+3. `RUN/doc/detailed-design.md`
+4. `RUN/doc/tasks/<module-name>.md` and `RUN/doc/tasks/progress.md`
+5. `RUN/doc/prompt.md`
+6. Execute `RUN/doc/prompt.md` through internal Superteam-compatible planning,
+   implementation, testing, and review.
+
+Stages 1 and 2 require explicit human approval after zero-pending review.
+Stages 3, 4, and 5 are still question-gated: if anything would change user
+intent, architecture, module boundaries, task scope, tests, or execution rules,
+the writer agent must ask questions and the controller must wait. After Stage 5
+is reviewed with zero pending issues, Stage 6 runs hands-off except for real
+blockers and runtime guardrails.
 
 ## Run Scope
 
 Default run directory:
 
 ```text
-working/superhua-runs/<run-id>/
+RUN = working/superhua-runs/<run-id>
 ```
 
-`<run-id>` is `YYYYMMDD-HHMM-<short-slug>` derived from the task goal. The main
-controller must maintain:
+`<run-id>` is `YYYYMMDD-HHMM-<short-slug>` derived from the task goal.
+
+Controller-owned project-level files:
 
 - `working/superhua-current.md`: current run id and run directory.
-- `working/superhua-index.md`: append-only list of run ids, goals, status, and
-  run directories.
+- `working/superhua-index.md`: append-only list of run ids, goals, status,
+  created time, and run directories.
 
 If the user starts a new SuperHUA task in a project that already has SuperHUA
 state, create a new run directory. If the user says to continue and there is
-more than one run, list the run ids and ask the user to choose. Do not infer
-the active run from root `proposal.md` or root `working/plan/`.
+more than one run, list the run ids and ask the user to choose. Do not infer the
+active run from root `proposal.md`, root `doc/`, or root `working/plan/`.
 
 Project code changes still happen in the project root. Only SuperHUA process
-files are isolated inside the run directory.
+files are isolated inside `RUN`.
 
 ## Main Controller Iron Law
 
 The main conversation is a state-machine controller only.
 
-The main controller must not write `<run-dir>/proposal.md`, must not write
-`<run-dir>/high-level-design.md`, must not write `<run-dir>/spec.md`, must not
-write task plans, must not implement code, and must not review its own work. It may
-only:
+The main controller must not write deliverables:
 
-- Inspect which state files exist.
-- Create and select run directories under `working/superhua-runs/`.
+- `RUN/doc/proposal.md`
+- `RUN/doc/high-level-design.md`
+- `RUN/doc/detailed-design.md`
+- `RUN/doc/tasks/*.md`
+- `RUN/doc/prompt.md`
+- `RUN/spec.md`
+- `RUN/plan/task-NNN/task.md`
+
+It may only:
+
+- Select or create run directories.
 - Maintain `working/superhua-current.md` and `working/superhua-index.md`.
-- Record the user's original request and answers in `<run-dir>/user-input.md`.
-- Dispatch the next required fresh agent using the prompt files in `agents/`.
-- Read the exact output files produced by agents.
-- Return agent-written questions to the user.
+- Record the user's original request and answers in `RUN/user-input.md`.
+- Dispatch the next required fresh agent using the exact prompt formats in
+  `references/workflow.md`.
+- Read exact output files produced by agents.
+- Return agent-written questions to the user and wait.
 - Count `Status: Pending` lines and dispatch the next agent in the flow.
-- Write approval marker files only after the user explicitly approves the
-  current document in the main conversation.
-- Maintain `<run-dir>/runtime-metrics.md` and runtime guard files when execution
-  exceeds the unattended budget.
+- Write approval marker files only after the user explicitly approves Stage 1
+  or Stage 2 in the main conversation.
+- Maintain `RUN/runtime-metrics.md` and runtime guard files.
 - Report completion, file paths, metrics, and blockers.
 
 On every state transition, emit this declaration exactly:
@@ -80,225 +92,235 @@ window.
 
 NEVER:
 
-- Skip a state transition.
-- Combine Stage 1 and Stage 2.
-- Add extra context to a dispatched agent prompt.
-- Interpret or summarize an agent response as proof of completion.
+- Skip a stage.
+- Combine two stages into one prompt, context, agent call, or output pass.
+- Treat review success as human approval.
+- Treat a generic "continue" as approval for proposal or high-level design.
 - Check status from chat text. Status comes from files only.
-- Fix, verify, review, or implement in the main window.
-- Continue when a required output file is missing.
+- Fix, verify, review, design, plan, prompt-write, or implement in the main
+  window.
+- Start Stage 6 before `RUN/doc/prompt.md` is reviewed with zero pending
+  issues.
+
+## File Contracts
+
+Human-visible deliverables:
+
+- `RUN/doc/proposal.md`
+- `RUN/doc/high-level-design.md`
+- `RUN/doc/detailed-design.md`
+- `RUN/doc/tasks/<module-name>.md`
+- `RUN/doc/tasks/progress.md`
+- `RUN/doc/prompt.md`
+
+Questions:
+
+- `RUN/questions/proposal-questions.md`
+- `RUN/questions/design-questions.md`
+- `RUN/questions/detailed-design-questions.md`
+- `RUN/questions/task-questions.md`
+- `RUN/questions/prompt-questions.md`
+
+Reviews:
+
+- `RUN/reviews/proposal-review-results.md`
+- `RUN/reviews/design-review-results.md`
+- `RUN/reviews/detailed-design-review-results.md`
+- `RUN/reviews/task-review-results.md`
+- `RUN/reviews/prompt-review-results.md`
+- `RUN/plan-review-results.md`
+- `RUN/plan/task-NNN/implement-review-results.md`
+
+Approvals and runtime state:
+
+- `RUN/approvals/proposal-approved.md`
+- `RUN/approvals/design-approved.md`
+- `RUN/spec.md`: internal Superteam-compatible spec synthesized after
+  `prompt.md`.
+- `RUN/plan/task-NNN/task.md`: internal executable tasks for Stage 6.
+- `RUN/execution-budget.md`
+- `RUN/execution-approved.md`
+- `RUN/runtime-metrics.md`
+- `RUN/spec-issues.md`
+- `RUN/task-issues.md`
+- `RUN/env-issues.md`
+- `RUN/plan/task-NNN/loop-issues.md`
+- `RUN/commit-message.md`
+- `RUN/task-summary.md`
+
+Legacy root files such as `proposal.md`, root `doc/`, or root `working/plan/`
+must be reported as legacy state and must not be treated as the selected run.
 
 ## State Detection
 
 Run this check first from the project root:
 
-- If no run is selected, select or create a run using the Run Scope rules above.
-- If legacy root files such as `proposal.md`, `working/high-level-design.md`,
-  or `working/plan/` exist outside `working/superhua-runs/`, report them as
-  legacy state. Do not treat them as the current run and do not overwrite them.
+- If no run is selected, select or create a run using the Run Scope rules.
+- If `RUN/doc/proposal.md` is missing: Stage 1.
+- If proposal review is missing or has `Status: Pending`: Stage 1 review loop.
+- If `RUN/approvals/proposal-approved.md` is missing or stale: return the
+  reviewed proposal path and wait for explicit user approval.
+- If `RUN/doc/high-level-design.md` is missing: Stage 2.
+- If design review is missing or has `Status: Pending`: Stage 2 review loop.
+- If `RUN/approvals/design-approved.md` is missing or stale: return the
+  reviewed design path and wait for explicit user approval.
+- If `RUN/doc/detailed-design.md` is missing: Stage 3.
+- If detailed-design review is missing or has `Status: Pending`: Stage 3 review
+  loop.
+- If `RUN/doc/tasks/progress.md` or any module task file is missing: Stage 4.
+- If task review is missing or has `Status: Pending`: Stage 4 review loop.
+- If `RUN/doc/prompt.md` is missing: Stage 5.
+- If prompt review is missing or has `Status: Pending`: Stage 5 review loop.
+- If prompt is reviewed with zero pending issues: Stage 6 execution.
 
-- Missing `<run-dir>/proposal.md`: enter Stage 1.
-- `<run-dir>/proposal.md` exists but
-  `<run-dir>/proposal-review-results.md` is missing or
-  has `Status: Pending`: run the proposal review loop first.
-- Reviewed `<run-dir>/proposal.md` exists but
-  `<run-dir>/proposal-approved.md` is missing or older than
-  `<run-dir>/proposal.md` or `<run-dir>/proposal-review-results.md`: return the
-  reviewed proposal path and wait for explicit user approval. Do not enter Stage
-  2.
-- Approved proposal exists but `<run-dir>/high-level-design.md` is missing:
-  enter Stage 2.
-- `<run-dir>/high-level-design.md` exists but
-  `<run-dir>/design-review-results.md` is missing or has `Status: Pending`: run
-  the design review loop first.
-- Reviewed `<run-dir>/high-level-design.md` exists but
-  `<run-dir>/design-approved.md` is missing or older than
-  `<run-dir>/high-level-design.md` or `<run-dir>/design-review-results.md`:
-  return the reviewed design path and wait for explicit user approval. Do not
-  enter Stage 3.
-- Both documents exist, both reviews have zero pending issues, and both
-  approval marker files exist: enter Stage 3 through `agents/spec-writer.md`,
-  then continue through Stage 4 automatically.
-
-Do not dispatch `agents/spec-writer.md`, planner, or implementer while either
-approval marker is missing.
+If any questions file for the active stage exists and is non-empty, return it to
+the user and wait before dispatching the next writer or reviewer.
 
 If the user explicitly asks to redo a stage, redo only that stage and downstream
-generated files that depend on it. Remove stale approval markers and automation
-markers for the redone stage and downstream stages before continuing.
+generated files that depend on it. Remove stale approval markers and downstream
+automation files before continuing.
 
 ## Stage 1: Proposal
 
-This stage is interactive but still subagent-driven. The goal is a requirements
-document at `<run-dir>/proposal.md`.
+Goal: create `RUN/doc/proposal.md`.
 
 Rules:
 
-- The main controller records the user's request and answers in
-  `<run-dir>/user-input.md`.
-- The main controller dispatches `agents/proposal-writer.md` using the exact
-  prompt format in `references/workflow.md`.
-- If requirements are unclear, proposal-writer writes
-  `<run-dir>/proposal-questions.md` instead of `<run-dir>/proposal.md`.
-- The main controller returns those questions to the user and waits.
-- After the user answers, the main controller appends the answers to
-  `<run-dir>/user-input.md` and re-dispatches proposal-writer.
-- When `<run-dir>/proposal.md` exists, dispatch `agents/proposal-reviewer.md` using the
-  exact prompt format.
-- If `<run-dir>/proposal-review-results.md` contains `Status: Pending`,
-  dispatch proposal-writer again. Repeat until zero pending issues remain.
-- When the review has zero pending issues, return the reviewed proposal path
-  plus a concise status summary to the user and wait.
-- Only after the user explicitly approves the requirements document, write
-  `<run-dir>/proposal-approved.md` and enter Stage 2. Accept approvals that name
-  the document or stage, such as `OK proposal`, `approve proposal`,
-  `确认需求文档`, or `需求文档确认`. Do not treat a generic "continue" as
-  approval.
-- Do not guess the user's intent. Do not create a high-level design in this
-  stage.
+- Dispatch `agents/proposal-writer.md`.
+- If requirements are unclear, it writes
+  `RUN/questions/proposal-questions.md`; return those questions and wait.
+- Review with `agents/proposal-reviewer.md`.
+- Loop writer and reviewer until
+  `RUN/reviews/proposal-review-results.md` has zero `Status: Pending`.
+- Return the reviewed proposal path and wait for explicit approval.
+- Only after approval that names the document or stage, write
+  `RUN/approvals/proposal-approved.md`.
+- Do not create design content in this stage.
 
-The proposal file must contain:
-
-- Goal
-- Current project context
-- Inputs and existing assets
-- Outputs
-- Functional requirements
-- Non-functional requirements
-- Non-goals
-- Constraints
-- Acceptance criteria
-- Open questions, only if the user explicitly leaves something open
+The proposal must contain goal, project context, inputs, outputs, functional and
+non-functional requirements, non-goals, constraints, acceptance criteria, and
+open questions only if explicitly left open by the user.
 
 ## Stage 2: High-Level Design
 
-This stage is interactive if design choices are unclear, but it is also
-subagent-driven. The goal is a design document at
-`<run-dir>/high-level-design.md`.
+Goal: create `RUN/doc/high-level-design.md`.
 
 Rules:
 
-- Stage 2 must start only after Stage 1 is reviewed, the proposal file exists,
-  and `<run-dir>/proposal-approved.md` exists.
-- The main controller dispatches `agents/design-writer.md` using the exact
-  prompt format in `references/workflow.md`.
-- If design-affecting ambiguity remains, design-writer writes
-  `<run-dir>/design-questions.md` instead of
-  `<run-dir>/high-level-design.md`.
-- The main controller returns those questions to the user and waits.
-- After the user answers, the main controller appends the answers to
-  `<run-dir>/user-input.md` and re-dispatches design-writer.
-- When `<run-dir>/high-level-design.md` exists, dispatch
-  `agents/design-reviewer.md` using the exact prompt format.
-- If `<run-dir>/design-review-results.md` contains `Status: Pending`, dispatch
-  design-writer again. Repeat until zero pending issues remain.
-- When the review has zero pending issues, return the reviewed
-  design path plus a concise status summary to the user
-  and wait.
-- Only after the user explicitly approves the design document, write
-  `<run-dir>/design-approved.md` and enter Stage 3. Accept approvals that name the
-  document or stage, such as `OK design`, `approve design`, `确认概要设计`, or
-  `概要设计确认`. Do not treat a generic "continue" as approval.
-- Do not guess the user's intent. Do not plan implementation tasks in this
+- Stage 2 starts only after proposal review has zero pending issues and
+  `RUN/approvals/proposal-approved.md` is fresh.
+- Dispatch `agents/design-writer.md`.
+- If design-affecting ambiguity remains, it writes
+  `RUN/questions/design-questions.md`; return those questions and wait.
+- Review with `agents/design-reviewer.md`.
+- Loop writer and reviewer until `RUN/reviews/design-review-results.md` has
+  zero `Status: Pending`.
+- Return the reviewed high-level design path and wait for explicit approval.
+- Only after approval that names the document or stage, write
+  `RUN/approvals/design-approved.md`.
+- Do not create detailed design, task files, prompt, or implementation in this
   stage.
 
-The high-level design file must contain:
+## Stage 3: Detailed Design
 
-- Overview
-- Requirements traceability
-- Module breakdown
-- Module relationships
-- Data flow and control flow
-- External interfaces
-- Error handling and edge cases
-- Test strategy
-- Risks and open decisions
+Goal: create `RUN/doc/detailed-design.md`.
 
-## Stage 3: Planning
+Rules:
 
-This stage is hands-off only after Stage 1 and Stage 2 are reviewed and
-human-approved.
+- Stage 3 starts only after Stage 1 and Stage 2 are reviewed and approved.
+- Dispatch `agents/detailed-design-writer.md`.
+- If ambiguity remains, it writes
+  `RUN/questions/detailed-design-questions.md`; return those questions and wait.
+- Review with `agents/detailed-design-reviewer.md`.
+- Loop writer and reviewer until
+  `RUN/reviews/detailed-design-review-results.md` has zero `Status: Pending`.
+- Continue automatically to Stage 4.
+- Do not create task files, prompt, or implementation in this stage.
 
-Dispatch `agents/spec-writer.md` to create `<run-dir>/spec.md` from the
-run-scoped proposal and high-level design if it does not exist or is stale. Then
-enter the original Superteam planning flow with run-scoped paths: create task
-files under `<run-dir>/plan/task-NNN/task.md`.
+## Stage 4: Module Tasks
 
-Use the planner and plan-reviewer prompts in `agents/` with the exact prompt
-formats in `references/workflow.md`. Planner, plan-reviewer, implementer,
-spec-reviewer, code-reviewer, black-box-testing, and hands-off issue handling
-must follow the complete upstream Superteam contracts preserved under
-`references/upstream-superteam/`, plus the SuperHUA overrides in
-`references/workflow.md`. Iterate until `<run-dir>/plan-review-results.md` has
-zero `Status: Pending` issues.
+Goal: create:
+
+- `RUN/doc/tasks/<module-name>.md` for every module.
+- `RUN/doc/tasks/progress.md`.
+
+Rules:
+
+- Dispatch `agents/task-writer.md`.
+- If task-splitting ambiguity remains, it writes
+  `RUN/questions/task-questions.md`; return those questions and wait.
+- Review with `agents/task-reviewer.md`.
+- Loop writer and reviewer until `RUN/reviews/task-review-results.md` has zero
+  `Status: Pending`.
+- Continue automatically to Stage 5.
+- Module task files and progress must use checklists.
+
+## Stage 5: VibeCoding Prompt
+
+Goal: create `RUN/doc/prompt.md`.
+
+Rules:
+
+- Dispatch `agents/prompt-writer.md`.
+- If prompt-generation ambiguity remains, it writes
+  `RUN/questions/prompt-questions.md`; return those questions and wait.
+- Review with `agents/prompt-reviewer.md`.
+- Loop writer and reviewer until `RUN/reviews/prompt-review-results.md` has
+  zero `Status: Pending`.
+- Continue automatically to Stage 6.
+
+`prompt.md` must instruct the future execution agent to read all run-scoped doc
+files, track `progress.md`, dispatch or spawn module subagents when available,
+run complete pytest unit tests for Python projects, run mypy and ruff for Python
+projects, treat skipped tests and failed checks as blockers, and continue
+without human participation after execution starts except for real blockers.
+
+## Stage 6: Execute Prompt
+
+Goal: execute `RUN/doc/prompt.md` hands-off.
+
+Stage 6 uses the bundled upstream Superteam snapshot as an internal execution
+engine:
+
+1. Dispatch `agents/spec-writer.md` to synthesize `RUN/spec.md` from
+   `RUN/doc/proposal.md`, `RUN/doc/high-level-design.md`,
+   `RUN/doc/detailed-design.md`, `RUN/doc/tasks/`, and `RUN/doc/prompt.md`.
+2. Dispatch `agents/planner.md` to create internal executable tasks under
+   `RUN/plan/task-NNN/task.md`.
+3. Dispatch `agents/plan-reviewer.md`; loop until zero `Status: Pending` or the
+   planning runtime budget is hit.
+4. Execute internal tasks serially with `agents/implementer.md`.
+5. After each task, run `agents/spec-reviewer.md` and
+   `agents/code-reviewer.md` serially. Never run them in parallel because they
+   share `implement-review-results.md`.
+6. Fix every `Status: Pending` issue and review again within the runtime
+   budget.
 
 Default unattended planning budget:
 
 - Maximum three planner/plan-reviewer cycles.
-- Maximum six task files before execution starts.
-
-If either budget is exceeded, stop before execution, write
-`<run-dir>/execution-budget.md`, and ask the user for explicit long-run approval
-such as `OK long run`. Do not enter Stage 4 for large plans until
-`<run-dir>/execution-approved.md` exists and is newer than
-`<run-dir>/plan-review-results.md`.
-
-Dispatch fresh agents using the prompt files. If subagent dispatch is
-unavailable, stop and report that SuperHUA cannot run in this session.
-
-## Stage 4: Execution
-
-This stage is hands-off once the plan is reviewed.
-
-Execute tasks serially. For each task:
-
-1. Run the implementer role.
-2. Require TDD: failing tests first, minimal implementation, passing tests.
-3. Run project tests and coverage checks. Code changes must keep coverage at least 80% unless the user explicitly changes that project rule.
-4. Run spec-reviewer and code-reviewer roles serially, never in parallel,
-   because both write `implement-review-results.md`.
-5. Fix every `Status: Pending` issue and review again.
-6. Continue until no pending issues remain, within the runtime budget below.
+- Maximum six internal task files before execution starts.
 
 Default unattended execution budget:
 
 - Maximum three full implementer -> spec-reviewer -> code-reviewer cycles per
-  task.
-- After three cycles for the same task, if `Status: Pending` remains, stop,
-  write `<run-dir>/plan/task-NNN/loop-issues.md`, and return the blocker summary
-  to the user instead of starting a fourth cycle.
+  internal task.
 
-Only stop for the user after at least three distinct, actually executed attempts
-fail to resolve an environment, requirement, or repeated-review blocker. Record
-the blocker in the proper issue file before stopping.
+When a budget is exceeded, stop and write the relevant guard file:
 
-Do not create git commits unless the user explicitly asks. Produce
-`<run-dir>/commit-message.md` and `<run-dir>/task-summary.md` instead.
+- `RUN/execution-budget.md`
+- `RUN/plan/task-NNN/loop-issues.md`
 
-## Superpowers Interop
+Large-plan execution resumes only after explicit approval such as
+`OK long run`; the controller then writes `RUN/execution-approved.md`.
 
-SuperHUA borrows Superpowers discipline, especially TDD, but SuperHUA owns the
-workflow after Stage 2.
-
-When operating inside SuperHUA:
-
-- Use `superpowers:test-driven-development` as the testing discipline when it
-  applies.
-- Do not switch to `superpowers:writing-plans`,
-  `superpowers:executing-plans`,
-  `superpowers:subagent-driven-development`,
-  `superpowers:dispatching-parallel-agents`, or
-  `superpowers:finishing-a-development-branch` unless the user explicitly asks.
-- Do not replace SuperHUA task files with a single generic plan file.
-- Keep role communication through files under the selected run directory.
-
-## Upstream Compatibility Layer
+## Superteam Compatibility
 
 The complete upstream Superteam snapshot is preserved under
 `references/upstream-superteam/` at commit
 `8123472865985477fb49841f93ca1c8782e4781d`.
 
-SuperHUA must treat those files as the canonical Stage 3/4 behavior:
+SuperHUA must treat these files as the canonical Stage 6 execution behavior:
 
 - `references/upstream-superteam/skills/planning/SKILL.md`
 - `references/upstream-superteam/skills/executing/SKILL.md`
@@ -312,35 +334,32 @@ SuperHUA must treat those files as the canonical Stage 3/4 behavior:
 
 Only these SuperHUA overrides apply:
 
-- Insert Stage 1 proposal and Stage 2 high-level design before creating
-  `<run-dir>/spec.md`.
-- Require explicit human approval marker files after proposal review and design
-  review before any spec, planning, or execution work.
-- Use `agents/spec-writer.md` to synthesize upstream-compatible
-  `<run-dir>/spec.md`.
-- Use `<run-dir>/task-issues.md`; do not use `working/plan-issues.md`.
-- Do not use the upstream Claude plugin namespace. Dispatch local prompt files
-  by path.
+- Stages 1-5 must run before upstream planning/execution.
+- Upstream root `working/*` examples map to the selected `RUN` paths.
+- `RUN/doc/prompt.md` is the Stage 6 execution charter.
+- `agents/spec-writer.md` synthesizes internal `RUN/spec.md`.
+- `RUN/task-issues.md` replaces upstream `working/plan-issues.md`.
+- Do not use the upstream Claude plugin namespace.
 - Do not make commits unless the user explicitly asks.
 
 ## Supporting Files
 
-- `references/workflow.md`: full file contracts and state-machine details.
-- `agents/proposal-writer.md`: requirements document writer role.
-- `agents/proposal-reviewer.md`: requirements document review role.
-- `agents/design-writer.md`: high-level design writer role.
-- `agents/design-reviewer.md`: high-level design review role.
-- `agents/spec-writer.md`: normalized Superteam-compatible spec writer role.
-- `agents/planner.md`: task planner role.
-- `agents/plan-reviewer.md`: plan review role.
-- `agents/implementer.md`: task implementation role.
-- `agents/spec-reviewer.md`: task/spec compliance review role.
-- `agents/code-reviewer.md`: code quality review role.
+- `references/workflow.md`: full file contracts and exact prompt formats.
+- `agents/proposal-writer.md`, `agents/proposal-reviewer.md`
+- `agents/design-writer.md`, `agents/design-reviewer.md`
+- `agents/detailed-design-writer.md`, `agents/detailed-design-reviewer.md`
+- `agents/task-writer.md`, `agents/task-reviewer.md`
+- `agents/prompt-writer.md`, `agents/prompt-reviewer.md`
+- `agents/spec-writer.md`
+- `agents/planner.md`, `agents/plan-reviewer.md`
+- `agents/implementer.md`, `agents/spec-reviewer.md`,
+  `agents/code-reviewer.md`
 
 ## Common Mistakes
 
-- Skipping the proposal discussion because the prompt looks detailed.
-- Writing the high-level design while requirements are still ambiguous.
-- Asking the user again during Stage 3 or Stage 4 for non-blocking details.
-- Treating reviewer output as advice. `Status: Pending` is a work item.
-- Letting skipped tests or low coverage pass silently.
+- Treating Stage 3-5 as "automatic, no questions allowed." They are automatic
+  only when the source documents are clear.
+- Replacing `RUN/doc/tasks/*.md` with internal `RUN/plan/task-NNN/task.md`.
+- Executing before `RUN/doc/prompt.md` exists and has zero pending review
+  issues.
+- Skipping pytest, mypy, ruff, coverage, or review loops.

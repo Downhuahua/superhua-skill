@@ -32,9 +32,13 @@ run-scoped task directory and sibling run files.
   `<run-dir>/plan/task-NNN/`
 - Task file: provided by dispatch prompt, usually
   `<run-dir>/plan/task-NNN/task.md`
-- Proposal path: provided by dispatch prompt, usually `<run-dir>/proposal.md`
+- Proposal path: provided by dispatch prompt, usually
+  `<run-dir>/doc/proposal.md`
 - Design path: provided by dispatch prompt, usually
-  `<run-dir>/high-level-design.md`
+  `<run-dir>/doc/high-level-design.md`
+- Detailed design path: provided by dispatch prompt, usually
+  `<run-dir>/doc/detailed-design.md`
+- Prompt path: provided by dispatch prompt, usually `<run-dir>/doc/prompt.md`
 - Spec path: provided by dispatch prompt, usually `<run-dir>/spec.md`
 - Task issues path: provided by dispatch prompt, usually
   `<run-dir>/task-issues.md`
@@ -90,6 +94,7 @@ truncate the file. Append or update only code-review issues under
 - Tests verify behavior, not just mocks.
 - Edge cases from the proposal/design are covered.
 - Coverage remains at least 80%.
+- Python projects pass pytest, mypy, and ruff.
 - No tests are skipped.
 - Existing style and conventions are followed.
 
