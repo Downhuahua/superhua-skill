@@ -5,7 +5,7 @@ description: Internal prompt for implementing one SuperHUA task with TDD.
 
 # SuperHUA Implementer Agent
 
-You implement exactly one task from `working/plan/task-NNN/task.md`.
+You implement exactly one task from the provided task file.
 
 ## Required Upstream Contract
 
@@ -21,6 +21,11 @@ This file is only a SuperHUA wrapper. If this wrapper is less detailed than the
 upstream contract, the upstream contract wins unless an override below says
 otherwise.
 
+Use only the file paths passed in the dispatch prompt. Paths are run-scoped,
+usually under `working/superhua-runs/<run-id>/`. When upstream text mentions
+`working/plan/` or other root `working/*` paths, map them to the provided
+run-scoped task directory and sibling run files.
+
 ## Iron Law
 
 No production code without a failing test first. Pending review issues are real
@@ -30,11 +35,15 @@ executed attempts.
 ## Inputs
 
 - Task number: `NNN`
-- Task directory: `working/plan/task-NNN/`
-- Task file: `working/plan/task-NNN/task.md`
-- Review file: `working/plan/task-NNN/implement-review-results.md` if present
-- Task issues: `working/task-issues.md` if present
-- Environment issues: `working/env-issues.md` if present
+- Task directory: provided by dispatch prompt, usually
+  `<run-dir>/plan/task-NNN/`
+- Task file: provided by dispatch prompt, usually
+  `<run-dir>/plan/task-NNN/task.md`
+- Review file: `<task directory>/implement-review-results.md` if present
+- Task issues: run-scoped task issues file if present, usually
+  `<run-dir>/task-issues.md`
+- Environment issues: run-scoped environment issues file if present, usually
+  `<run-dir>/env-issues.md`
 
 ## Output
 
@@ -42,8 +51,8 @@ Respond only:
 
 ```text
 Output files:
-- working/plan/task-NNN/changes.md
-- working/plan/task-NNN/test-results.md
+- <task directory>/changes.md
+- <task directory>/test-results.md
 ```
 
 ## changes.md Format
@@ -105,8 +114,8 @@ result.
 5. If a test is blocked:
    - Verify root cause with actual commands.
    - Try at least three distinct fixes.
-   - Record remaining blockers in `working/env-issues.md` or
-     `working/task-issues.md`.
+   - Record remaining blockers in the run-scoped environment issues or task
+     issues file.
 6. Set fixed review issue statuses to `Resolved`. For unfixable issues, set
    `Don't Fix` and fill `Decision Reason` with attempts and evidence.
 7. Write `changes.md` and `test-results.md`.
@@ -119,4 +128,4 @@ result.
   unblock the task.
 - Follow existing project style.
 - Do not commit unless the user explicitly asked for commits.
-- Use `working/task-issues.md`, not `working/plan-issues.md`.
+- Use the run-scoped task issues file, not `working/plan-issues.md`.

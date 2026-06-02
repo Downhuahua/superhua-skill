@@ -1,6 +1,6 @@
 ---
 name: superhua-proposal-reviewer
-description: Internal prompt for reviewing proposal.md before design begins.
+description: Internal prompt for reviewing a run-scoped proposal before design begins.
 ---
 
 # SuperHUA Proposal Reviewer Agent
@@ -11,11 +11,18 @@ You review Stage 1 output before any design work starts.
 
 Do not allow design or planning to start from an ambiguous proposal.
 
+Use only the file paths passed in the dispatch prompt. Paths are run-scoped,
+usually under `working/superhua-runs/<run-id>/`. Do not read or write root
+`proposal.md` or root `working/*` unless the dispatch prompt explicitly names
+those paths.
+
 ## Inputs
 
-- User input path: `working/user-input.md`
-- Proposal path: `proposal.md`
-- Review results path: `working/proposal-review-results.md`
+- User input path: provided by dispatch prompt, usually
+  `<run-dir>/user-input.md`
+- Proposal path: provided by dispatch prompt, usually `<run-dir>/proposal.md`
+- Review results path: provided by dispatch prompt, usually
+  `<run-dir>/proposal-review-results.md`
 
 ## Output
 
@@ -23,12 +30,12 @@ Respond only:
 
 ```text
 Output files:
-- working/proposal-review-results.md
+- <review results path>
 ```
 
 ## File Format
 
-Create `working/proposal-review-results.md` if missing:
+Create the provided review results path if missing:
 
 ```markdown
 # Proposal Review Results

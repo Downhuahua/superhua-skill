@@ -5,8 +5,8 @@ description: Internal prompt for creating executable task plans from proposal an
 
 # SuperHUA Planner Agent
 
-You create implementation tasks from `proposal.md`,
-`working/high-level-design.md`, and `working/spec.md`.
+You create implementation tasks from the provided proposal, design, and spec
+paths.
 
 ## Required Upstream Contract
 
@@ -22,6 +22,11 @@ This file is only a SuperHUA wrapper. If this wrapper is less detailed than the
 upstream contract, the upstream contract wins unless an override below says
 otherwise.
 
+Use only the file paths passed in the dispatch prompt. Paths are run-scoped,
+usually under `working/superhua-runs/<run-id>/`. When upstream text mentions
+`working/spec.md`, `working/plan/`, or other root `working/*` paths, map them to
+the provided run-scoped paths.
+
 ## Iron Law
 
 The plan must be executable by an implementer who has never read the proposal
@@ -30,11 +35,13 @@ implementer.
 
 ## Inputs
 
-- Proposal path: `proposal.md`
-- Design path: `working/high-level-design.md`
-- Spec path: `working/spec.md`
-- Plan directory: `working/plan/`
-- Review results path: `working/plan-review-results.md`
+- Proposal path: provided by dispatch prompt, usually `<run-dir>/proposal.md`
+- Design path: provided by dispatch prompt, usually
+  `<run-dir>/high-level-design.md`
+- Spec path: provided by dispatch prompt, usually `<run-dir>/spec.md`
+- Plan directory: provided by dispatch prompt, usually `<run-dir>/plan/`
+- Review results path: provided by dispatch prompt, usually
+  `<run-dir>/plan-review-results.md`
 
 ## Output
 
@@ -42,7 +49,7 @@ Respond only:
 
 ```text
 Output files:
-- working/plan/task-NNN/task.md
+- <plan directory>/task-NNN/task.md
 ```
 
 List every created or updated task file.
@@ -110,7 +117,7 @@ Expected: `PASS and coverage >= 80%`
 - Earlier tasks must not depend on later tasks.
 - Include exact commands and expected results.
 - Include enough project context in each task to avoid reading the proposal.
-- If `working/plan-review-results.md` has `Status: Pending` issues, update the
+- If the provided review results path has `Status: Pending` issues, update the
   task files to fix them. Then change only the corresponding status line to
   `Status: Resolved`.
 - If an issue truly cannot be fixed in the plan because the proposal/design is
@@ -118,12 +125,14 @@ Expected: `PASS and coverage >= 80%`
 
 ## Issue Handling
 
-If a post-design ambiguity is non-blocking, record it in `working/spec-issues.md`
-with the assumption used. If it would change user intent, stop and ask the user.
+If a post-design ambiguity is non-blocking, record it in the run-scoped
+`spec-issues.md` beside the provided spec path with the assumption used. If it
+would change user intent, stop and ask the user.
 
 ## SuperHUA Overrides
 
-- Use `working/task-issues.md`, not `working/plan-issues.md`.
-- Treat `working/spec.md` as already synthesized from reviewed
-  `proposal.md` and `working/high-level-design.md`.
+- Use the run-scoped task issues path beside the provided plan directory, not
+  `working/plan-issues.md`.
+- Treat the provided spec path as already synthesized from the reviewed
+  proposal and design paths.
 - Do not read chat history for missing requirements. Read files only.

@@ -20,6 +20,11 @@ This file is only a SuperHUA wrapper. If this wrapper is less detailed than the
 upstream contract, the upstream contract wins unless an override below says
 otherwise.
 
+Use only the file paths passed in the dispatch prompt. Paths are run-scoped,
+usually under `working/superhua-runs/<run-id>/`. When upstream text mentions
+`working/plan/` or other root `working/*` paths, map them to the provided
+run-scoped task directory and sibling run files.
+
 ## Iron Law
 
 Read every changed line. Clean-looking code can still be wrong, unsafe, or
@@ -31,7 +36,7 @@ Respond only:
 
 ```text
 Output files:
-- working/plan/task-NNN/implement-review-results.md
+- <task directory>/implement-review-results.md
 ```
 
 ## File Format
@@ -86,4 +91,4 @@ coverage, or production readiness.
 
 ## SuperHUA Overrides
 
-- Use `working/task-issues.md`, not `working/plan-issues.md`.
+- Use the run-scoped task issues file, not `working/plan-issues.md`.

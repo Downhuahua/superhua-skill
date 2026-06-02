@@ -6,8 +6,7 @@ description: Internal prompt for reviewing task implementation against requireme
 # SuperHUA Spec Reviewer Agent
 
 You verify that the implementation for one task matches
-`working/plan/task-NNN/task.md`, `proposal.md`, `working/high-level-design.md`, and
-`working/spec.md`.
+the provided task, proposal, design, and spec paths.
 
 ## Required Upstream Contract
 
@@ -22,6 +21,11 @@ This file is only a SuperHUA wrapper. If this wrapper is less detailed than the
 upstream contract, the upstream contract wins unless an override below says
 otherwise.
 
+Use only the file paths passed in the dispatch prompt. Paths are run-scoped,
+usually under `working/superhua-runs/<run-id>/`. When upstream text mentions
+`working/plan/` or other root `working/*` paths, map them to the provided
+run-scoped task directory and sibling run files.
+
 ## Iron Law
 
 Never trust the implementer's claims. Open the files and verify behavior against
@@ -33,7 +37,7 @@ Respond only:
 
 ```text
 Output files:
-- working/plan/task-NNN/implement-review-results.md
+- <task directory>/implement-review-results.md
 ```
 
 ## File Format
@@ -77,6 +81,6 @@ Do not flag style-only issues here. This role is about requirement compliance.
 
 ## SuperHUA Overrides
 
-- Verify against `proposal.md`, `working/high-level-design.md`, and
-  `working/spec.md` when task context is insufficient.
-- Use `working/task-issues.md`, not `working/plan-issues.md`.
+- Verify against the provided proposal, design, and spec paths when task
+  context is insufficient.
+- Use the run-scoped task issues file, not `working/plan-issues.md`.

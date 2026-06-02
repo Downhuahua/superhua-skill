@@ -11,109 +11,150 @@ Codex adaptation:
 - Skill name: `superhua`.
 - Claude plugin namespace references were removed.
 - The first two stages are separate, subagent-driven, and question-gated.
+- All process files are scoped to a SuperHUA run directory so multiple tasks can
+  coexist in one project repository.
 - Proposal review and design review are necessary but not sufficient. The main
   controller must also receive explicit human approval and write approval
   marker files before advancing.
 - Planning and execution are file-backed and hands-off.
 - Commits are not made unless the user asks.
 
+## Run Scope
+
+Define:
+
+```text
+RUN = working/superhua-runs/<run-id>
+```
+
+`<run-id>` is `YYYYMMDD-HHMM-<short-slug>` derived from the task goal. The slug
+must be lowercase ASCII, hyphen-separated, and short enough to scan.
+
+Controller-owned project-level files:
+
+- `working/superhua-current.md`: current run id and run directory.
+- `working/superhua-index.md`: append-only index of run ids, goals, status,
+  created time, and run directories.
+
+Run selection rules:
+
+- If the user starts a new SuperHUA task, create a new `RUN`.
+- If the user continues a task and `working/superhua-current.md` points to one
+  existing run, use that run.
+- If the user continues a task and multiple runs exist without a clear current
+  run, list run ids from `working/superhua-index.md` and ask the user to choose.
+- If legacy root files such as `proposal.md`, `working/high-level-design.md`, or
+  `working/plan/` exist outside `working/superhua-runs/`, report them as legacy
+  state. Do not treat them as the selected run and do not overwrite them.
+- Project code changes still happen in the project root. Only SuperHUA process
+  files live under `RUN`.
+
 ## File Contracts
 
 Human-facing gates:
 
-- `working/user-input.md`: controller-maintained transcript of the user's
+- `RUN/user-input.md`: controller-maintained transcript of the user's
   original request and answers. This is the only content file the main
   controller writes directly; approval markers below are state markers, not
   deliverables.
-- `working/proposal-questions.md`: questions from proposal-writer when
+- `RUN/proposal-questions.md`: questions from proposal-writer when
   requirements are unclear.
-- `proposal.md`: requirements document created after user discussion.
-- `working/proposal-review-results.md`: proposal review issues.
-- `working/proposal-approved.md`: controller-written marker created only after
-  the user explicitly approves the reviewed `proposal.md`.
-- `working/design-questions.md`: questions from design-writer when design
+- `RUN/proposal.md`: requirements document created after user discussion.
+- `RUN/proposal-review-results.md`: proposal review issues.
+- `RUN/proposal-approved.md`: controller-written marker created only after the
+  user explicitly approves the reviewed proposal.
+- `RUN/design-questions.md`: questions from design-writer when design
   choices are unclear.
-- `working/high-level-design.md`: module-level design created from
-  `proposal.md`.
-- `working/design-review-results.md`: high-level design review issues.
-- `working/design-approved.md`: controller-written marker created only after
-  the user explicitly approves the reviewed `working/high-level-design.md`.
-- `working/execution-budget.md`: controller-written summary when the reviewed
-  plan exceeds the default unattended execution budget.
-- `working/execution-approved.md`: controller-written marker created only after
+- `RUN/high-level-design.md`: module-level design created from `RUN/proposal.md`.
+- `RUN/design-review-results.md`: high-level design review issues.
+- `RUN/design-approved.md`: controller-written marker created only after the
+  user explicitly approves the reviewed high-level design.
+- `RUN/execution-budget.md`: controller-written summary when the reviewed plan
+  exceeds the default unattended execution budget.
+- `RUN/execution-approved.md`: controller-written marker created only after
   the user explicitly approves a large or long-running execution.
 
 Automation state:
 
-- `working/runtime-metrics.md`: controller-maintained dispatch counts,
+- `RUN/runtime-metrics.md`: controller-maintained dispatch counts,
   per-task review cycle counts, and wall-clock timestamps.
-- `working/spec.md`: normalized implementation spec derived from proposal and
+- `RUN/spec.md`: normalized implementation spec derived from proposal and
   design.
-- `working/plan/task-NNN/task.md`: one executable task.
-- `working/plan-review-results.md`: planner review issues.
-- `working/plan/task-NNN/test-results.md`: implementation test results.
-- `working/plan/task-NNN/changes.md`: implementation change report.
-- `working/plan/task-NNN/implement-review-results.md`: spec and code review
+- `RUN/plan/task-NNN/task.md`: one executable task.
+- `RUN/plan-review-results.md`: planner review issues.
+- `RUN/plan/task-NNN/test-results.md`: implementation test results.
+- `RUN/plan/task-NNN/changes.md`: implementation change report.
+- `RUN/plan/task-NNN/implement-review-results.md`: spec and code review
   issues.
-- `working/spec-issues.md`: ambiguities in proposal/spec discovered after the
+- `RUN/spec-issues.md`: ambiguities in proposal/spec discovered after the
   interactive gates.
-- `working/task-issues.md`: ambiguities in task files.
-- `working/env-issues.md`: environment blockers after three real attempts.
-- `working/plan/task-NNN/loop-issues.md`: repeated-review loop blocker after
+- `RUN/task-issues.md`: ambiguities in task files.
+- `RUN/env-issues.md`: environment blockers after three real attempts.
+- `RUN/plan/task-NNN/loop-issues.md`: repeated-review loop blocker after
   three full implementation review cycles for one task.
-- `working/commit-message.md`: suggested conventional commit message.
-- `working/task-summary.md`: final task summary and unresolved assumptions.
+- `RUN/commit-message.md`: suggested conventional commit message.
+- `RUN/task-summary.md`: final task summary and unresolved assumptions.
 
 ## Issue File Naming
 
-SuperHUA standardizes on `working/task-issues.md` for task-document problems.
+SuperHUA standardizes on `RUN/task-issues.md` for task-document problems.
 Some upstream Superteam text used `working/plan-issues.md`; agents must not
 create or read `working/plan-issues.md` in SuperHUA. Use
-`working/task-issues.md` instead.
+`RUN/task-issues.md` instead.
 
 ## Agent Prompt Formats
 
 Dispatch prompts must contain only the relevant prompt-file path and file-path
 metadata. Do not include summaries, advice, copied requirements, or chat
-history. The fresh agent must read files from disk.
+history. The fresh agent must read files from disk. In the templates below,
+replace `RUN` with the concrete selected run directory, for example
+`working/superhua-runs/20260602-1430-3-2-refactor`.
 
 ### proposal-writer
 
 ```text
 - Prompt file: C:/Users/HUA/.codex/skills/superhua/agents/proposal-writer.md
-- User input path: working/user-input.md
-- Proposal path: proposal.md
-- Questions path: working/proposal-questions.md
-- Review results path: working/proposal-review-results.md
+- Run id: <run-id>
+- Run directory: RUN
+- User input path: RUN/user-input.md
+- Proposal path: RUN/proposal.md
+- Questions path: RUN/proposal-questions.md
+- Review results path: RUN/proposal-review-results.md
 ```
 
 ### proposal-reviewer
 
 ```text
 - Prompt file: C:/Users/HUA/.codex/skills/superhua/agents/proposal-reviewer.md
-- User input path: working/user-input.md
-- Proposal path: proposal.md
-- Review results path: working/proposal-review-results.md
+- Run id: <run-id>
+- Run directory: RUN
+- User input path: RUN/user-input.md
+- Proposal path: RUN/proposal.md
+- Review results path: RUN/proposal-review-results.md
 ```
 
 ### design-writer
 
 ```text
 - Prompt file: C:/Users/HUA/.codex/skills/superhua/agents/design-writer.md
-- User input path: working/user-input.md
-- Proposal path: proposal.md
-- Design path: working/high-level-design.md
-- Questions path: working/design-questions.md
-- Review results path: working/design-review-results.md
+- Run id: <run-id>
+- Run directory: RUN
+- User input path: RUN/user-input.md
+- Proposal path: RUN/proposal.md
+- Design path: RUN/high-level-design.md
+- Questions path: RUN/design-questions.md
+- Review results path: RUN/design-review-results.md
 ```
 
 ### design-reviewer
 
 ```text
 - Prompt file: C:/Users/HUA/.codex/skills/superhua/agents/design-reviewer.md
-- Proposal path: proposal.md
-- Design path: working/high-level-design.md
-- Review results path: working/design-review-results.md
+- Run id: <run-id>
+- Run directory: RUN
+- Proposal path: RUN/proposal.md
+- Design path: RUN/high-level-design.md
+- Review results path: RUN/design-review-results.md
 ```
 
 ### planner
@@ -124,11 +165,15 @@ history. The fresh agent must read files from disk.
 - Upstream planning skill path: C:/Users/HUA/.codex/skills/superhua/references/upstream-superteam/skills/planning/SKILL.md
 - Upstream black-box testing path: C:/Users/HUA/.codex/skills/superhua/references/upstream-superteam/skills/black-box-testing/SKILL.md
 - Upstream issue handling path: C:/Users/HUA/.codex/skills/superhua/references/upstream-superteam/skills/hands-off-issue-handling/SKILL.md
-- Proposal path: proposal.md
-- Design path: working/high-level-design.md
-- Spec path: working/spec.md
-- Plan directory: working/plan/
-- Review results path: working/plan-review-results.md
+- Run id: <run-id>
+- Run directory: RUN
+- Proposal path: RUN/proposal.md
+- Design path: RUN/high-level-design.md
+- Spec path: RUN/spec.md
+- Plan directory: RUN/plan/
+- Review results path: RUN/plan-review-results.md
+- Task issues path: RUN/task-issues.md
+- Spec issues path: RUN/spec-issues.md
 ```
 
 ### plan-reviewer
@@ -138,11 +183,14 @@ history. The fresh agent must read files from disk.
 - Upstream contract path: C:/Users/HUA/.codex/skills/superhua/references/upstream-superteam/agents/plan-reviewer.md
 - Upstream planning skill path: C:/Users/HUA/.codex/skills/superhua/references/upstream-superteam/skills/planning/SKILL.md
 - Upstream black-box testing path: C:/Users/HUA/.codex/skills/superhua/references/upstream-superteam/skills/black-box-testing/SKILL.md
-- Proposal path: proposal.md
-- Design path: working/high-level-design.md
-- Spec path: working/spec.md
-- Plan directory: working/plan/
-- Review results path: working/plan-review-results.md
+- Run id: <run-id>
+- Run directory: RUN
+- Proposal path: RUN/proposal.md
+- Design path: RUN/high-level-design.md
+- Spec path: RUN/spec.md
+- Plan directory: RUN/plan/
+- Review results path: RUN/plan-review-results.md
+- Task issues path: RUN/task-issues.md
 ```
 
 ### implementer
@@ -153,9 +201,13 @@ history. The fresh agent must read files from disk.
 - Upstream executing skill path: C:/Users/HUA/.codex/skills/superhua/references/upstream-superteam/skills/executing/SKILL.md
 - Upstream black-box testing path: C:/Users/HUA/.codex/skills/superhua/references/upstream-superteam/skills/black-box-testing/SKILL.md
 - Upstream issue handling path: C:/Users/HUA/.codex/skills/superhua/references/upstream-superteam/skills/hands-off-issue-handling/SKILL.md
+- Run id: <run-id>
+- Run directory: RUN
 - Task number: NNN
-- Task directory: working/plan/task-NNN/
-- Task file: working/plan/task-NNN/task.md
+- Task directory: RUN/plan/task-NNN/
+- Task file: RUN/plan/task-NNN/task.md
+- Task issues path: RUN/task-issues.md
+- Environment issues path: RUN/env-issues.md
 ```
 
 ### spec-reviewer
@@ -165,9 +217,15 @@ history. The fresh agent must read files from disk.
 - Upstream contract path: C:/Users/HUA/.codex/skills/superhua/references/upstream-superteam/agents/spec-reviewer.md
 - Upstream executing skill path: C:/Users/HUA/.codex/skills/superhua/references/upstream-superteam/skills/executing/SKILL.md
 - Upstream black-box testing path: C:/Users/HUA/.codex/skills/superhua/references/upstream-superteam/skills/black-box-testing/SKILL.md
+- Run id: <run-id>
+- Run directory: RUN
 - Task number: NNN
-- Task directory: working/plan/task-NNN/
-- Task file: working/plan/task-NNN/task.md
+- Task directory: RUN/plan/task-NNN/
+- Task file: RUN/plan/task-NNN/task.md
+- Proposal path: RUN/proposal.md
+- Design path: RUN/high-level-design.md
+- Spec path: RUN/spec.md
+- Task issues path: RUN/task-issues.md
 ```
 
 ### code-reviewer
@@ -177,18 +235,24 @@ history. The fresh agent must read files from disk.
 - Upstream contract path: C:/Users/HUA/.codex/skills/superhua/references/upstream-superteam/agents/code-reviewer.md
 - Upstream executing skill path: C:/Users/HUA/.codex/skills/superhua/references/upstream-superteam/skills/executing/SKILL.md
 - Upstream black-box testing path: C:/Users/HUA/.codex/skills/superhua/references/upstream-superteam/skills/black-box-testing/SKILL.md
+- Run id: <run-id>
+- Run directory: RUN
 - Task number: NNN
-- Task directory: working/plan/task-NNN/
-- Task file: working/plan/task-NNN/task.md
+- Task directory: RUN/plan/task-NNN/
+- Task file: RUN/plan/task-NNN/task.md
+- Task issues path: RUN/task-issues.md
 ```
 
 ### spec-writer
 
 ```text
 - Prompt file: C:/Users/HUA/.codex/skills/superhua/agents/spec-writer.md
-- Proposal path: proposal.md
-- Design path: working/high-level-design.md
-- Spec path: working/spec.md
+- Run id: <run-id>
+- Run directory: RUN
+- Proposal path: RUN/proposal.md
+- Design path: RUN/high-level-design.md
+- Spec path: RUN/spec.md
+- Spec issues path: RUN/spec-issues.md
 ```
 
 ## State Machine
@@ -224,42 +288,49 @@ NEVER:
 ```mermaid
 flowchart TD
   start["Inspect project root"]
-  proposal{"proposal.md exists?"}
-  design{"working/high-level-design.md exists?"}
-  record_user_input["Record user request or answers in working/user-input.md"]
+  select_run["Select or create RUN"]
+  legacy_state{"Legacy root SuperHUA files exist?"}
+  report_legacy["Report legacy state; do not overwrite"]
+  proposal{"RUN/proposal.md exists?"}
+  design{"RUN/high-level-design.md exists?"}
+  record_user_input["Record user request or answers in RUN/user-input.md"]
   dispatch_proposal_writer["Dispatch proposal-writer"]
-  proposal_questions{"working/proposal-questions.md exists?"}
+  proposal_questions{"RUN/proposal-questions.md exists?"}
   return_proposal_questions["Return proposal questions and wait"]
   dispatch_proposal_reviewer["Dispatch proposal-reviewer"]
   count_proposal_pending["Count Status: Pending in proposal review"]
   proposal_pending{"proposal pending issues?"}
-  proposal_approved{"working/proposal-approved.md exists?"}
+  proposal_approved{"RUN/proposal-approved.md exists and is fresh?"}
   request_proposal_approval["Return reviewed proposal and wait for explicit approval"]
   user_proposal_approval{"User explicitly approved proposal?"}
-  mark_proposal_approved["Write working/proposal-approved.md"]
+  mark_proposal_approved["Write RUN/proposal-approved.md"]
   dispatch_design_writer["Dispatch design-writer"]
-  design_questions{"working/design-questions.md exists?"}
+  design_questions{"RUN/design-questions.md exists?"}
   return_design_questions["Return design questions and wait"]
   dispatch_design_reviewer["Dispatch design-reviewer"]
   count_design_pending["Count Status: Pending in design review"]
   design_pending{"design pending issues?"}
-  design_approved{"working/design-approved.md exists?"}
+  design_approved{"RUN/design-approved.md exists and is fresh?"}
   request_design_approval["Return reviewed design and wait for explicit approval"]
   user_design_approval{"User explicitly approved design?"}
-  mark_design_approved["Write working/design-approved.md"]
+  mark_design_approved["Write RUN/design-approved.md"]
   write_spec["Dispatch spec-writer"]
-  plan["Run upstream planning into working/plan/"]
+  plan["Run upstream planning into RUN/plan/"]
   review_plan["Review plan until no Pending issues or budget trip"]
   execution_budget{"Plan within unattended budget or execution-approved exists?"}
-  request_execution_approval["Write execution-budget.md and wait for OK long run"]
-  mark_execution_approved["Write working/execution-approved.md"]
+  request_execution_approval["Write RUN/execution-budget.md and wait for OK long run"]
+  mark_execution_approved["Write RUN/execution-approved.md"]
   execute["Execute each task with TDD"]
   task_cycle_budget{"Task full review cycles <= 3?"}
   write_loop_issue["Write task loop-issues.md and wait"]
   review_impl["Spec and code review until no Pending issues or budget trip"]
-  summary["Write commit-message.md and task-summary.md"]
+  summary["Write RUN/commit-message.md and RUN/task-summary.md"]
 
-  start --> proposal
+  start --> select_run
+  select_run --> legacy_state
+  legacy_state -->|"yes"| report_legacy
+  report_legacy --> proposal
+  legacy_state -->|"no"| proposal
   proposal -->|"no"| record_user_input
   record_user_input --> dispatch_proposal_writer
   dispatch_proposal_writer --> proposal_questions
@@ -309,190 +380,188 @@ flowchart TD
 
 ## Stage 1 Exact File Checks
 
-1. ONLY run a file existence check for `working/user-input.md`; if missing,
-   create it from the user's exact request.
+0. Select or create `RUN` using the Run Scope rules. Create `RUN` if missing,
+   update `working/superhua-current.md`, and append to
+   `working/superhua-index.md` for new runs.
+1. ONLY run a file existence check for `RUN/user-input.md`; if missing, create
+   it from the user's exact request.
 2. Dispatch proposal-writer with the exact prompt format.
-3. ONLY run file existence checks for `working/proposal-questions.md` and
-   `proposal.md`.
-4. If `working/proposal-questions.md` exists and is non-empty, return its
-   contents to the user and wait.
-5. If `proposal.md` exists, dispatch proposal-reviewer with the exact prompt
+3. ONLY run file existence checks for `RUN/proposal-questions.md` and
+   `RUN/proposal.md`.
+4. If `RUN/proposal-questions.md` exists and is non-empty, return its contents
+   to the user and wait.
+5. If `RUN/proposal.md` exists, dispatch proposal-reviewer with the exact prompt
    format.
-6. ONLY count `Status: Pending` in `working/proposal-review-results.md`.
+6. ONLY count `Status: Pending` in `RUN/proposal-review-results.md`.
 7. If count is greater than zero, dispatch proposal-writer again. Repeat writer
    then reviewer until the count is zero.
 8. If count is zero, ONLY run file existence and modified-time checks for
-   `proposal.md`, `working/proposal-review-results.md`, and
-   `working/proposal-approved.md`.
-9. If `working/proposal-approved.md` is missing or older than either
-   `proposal.md` or `working/proposal-review-results.md`, return the reviewed
-   `proposal.md` path and the zero-pending review status to the user, then
-   wait. Do not dispatch design-writer.
-10. Only when the user explicitly approves the requirements document in the
-    main conversation, write `working/proposal-approved.md`. The user must name
-    the document or stage, for example `OK proposal`, `approve proposal`,
+   `RUN/proposal.md`, `RUN/proposal-review-results.md`, and
+   `RUN/proposal-approved.md`.
+9. If `RUN/proposal-approved.md` is missing or older than either
+   `RUN/proposal.md` or `RUN/proposal-review-results.md`, return the reviewed
+   proposal path and the zero-pending review status to the user, then wait. Do
+   not dispatch design-writer.
+10. Only when the user explicitly approves the requirements document in the main
+    conversation, write `RUN/proposal-approved.md`. The user must name the
+    document or stage, for example `OK proposal`, `approve proposal`,
     `确认需求文档`, or `需求文档确认`. A generic "continue" is not approval.
 
 ## Stage 2 Exact File Checks
 
-1. ONLY run file existence checks for `proposal.md` and
-   `working/proposal-review-results.md`.
-2. ONLY count `Status: Pending` in `working/proposal-review-results.md`; Stage
-   2 cannot start while the count is greater than zero.
+1. ONLY run file existence checks for `RUN/proposal.md` and
+   `RUN/proposal-review-results.md`.
+2. ONLY count `Status: Pending` in `RUN/proposal-review-results.md`; Stage 2
+   cannot start while the count is greater than zero.
 3. ONLY run file existence and modified-time checks for
-   `working/proposal-approved.md`, `proposal.md`, and
-   `working/proposal-review-results.md`; Stage 2 cannot start while approval is
+   `RUN/proposal-approved.md`, `RUN/proposal.md`, and
+   `RUN/proposal-review-results.md`; Stage 2 cannot start while approval is
    missing or stale.
 4. Dispatch design-writer with the exact prompt format.
-5. ONLY run file existence checks for `working/design-questions.md` and
-   `working/high-level-design.md`.
-6. If `working/design-questions.md` exists and is non-empty, return its
-   contents to the user and wait.
-7. If `working/high-level-design.md` exists, dispatch design-reviewer with the
-   exact prompt format.
-8. ONLY count `Status: Pending` in `working/design-review-results.md`.
+5. ONLY run file existence checks for `RUN/design-questions.md` and
+   `RUN/high-level-design.md`.
+6. If `RUN/design-questions.md` exists and is non-empty, return its contents to
+   the user and wait.
+7. If `RUN/high-level-design.md` exists, dispatch design-reviewer with the exact
+   prompt format.
+8. ONLY count `Status: Pending` in `RUN/design-review-results.md`.
 9. If count is greater than zero, dispatch design-writer again. Repeat writer
    then reviewer until the count is zero.
 10. If count is zero, ONLY run file existence and modified-time checks for
-    `working/high-level-design.md`, `working/design-review-results.md`, and
-    `working/design-approved.md`.
-11. If `working/design-approved.md` is missing or older than either
-    `working/high-level-design.md` or `working/design-review-results.md`, return
-    the reviewed `working/high-level-design.md` path and the zero-pending review
-    status to the user, then wait. Do not dispatch spec-writer, planner, or
-    implementer.
+    `RUN/high-level-design.md`, `RUN/design-review-results.md`, and
+    `RUN/design-approved.md`.
+11. If `RUN/design-approved.md` is missing or older than either
+    `RUN/high-level-design.md` or `RUN/design-review-results.md`, return the
+    reviewed design path and the zero-pending review status to the user, then
+    wait. Do not dispatch spec-writer, planner, or implementer.
 12. Only when the user explicitly approves the design document in the main
-    conversation, write `working/design-approved.md`. The user must name the
+    conversation, write `RUN/design-approved.md`. The user must name the
     document or stage, for example `OK design`, `approve design`,
     `确认概要设计`, or `概要设计确认`. A generic "continue" is not approval.
 
 ## Stage 3 Exact File Checks
 
-1. ONLY run file existence checks for `proposal.md`,
-   `working/high-level-design.md`, `working/proposal-review-results.md`, and
-   `working/design-review-results.md`.
-2. If `working/proposal-review-results.md` is missing, dispatch
-   proposal-reviewer with the exact prompt format.
-3. If `working/design-review-results.md` is missing, dispatch design-reviewer
+1. ONLY run file existence checks for `RUN/proposal.md`,
+   `RUN/high-level-design.md`, `RUN/proposal-review-results.md`, and
+   `RUN/design-review-results.md`.
+2. If `RUN/proposal-review-results.md` is missing, dispatch proposal-reviewer
    with the exact prompt format.
-4. ONLY count `Status: Pending` in both review files; Stage 3 cannot start
-   while either count is greater than zero.
+3. If `RUN/design-review-results.md` is missing, dispatch design-reviewer with
+   the exact prompt format.
+4. ONLY count `Status: Pending` in both review files; Stage 3 cannot start while
+   either count is greater than zero.
 5. ONLY run file existence and modified-time checks for
-   `working/proposal-approved.md`, `proposal.md`,
-   `working/proposal-review-results.md`, `working/design-approved.md`,
-   `working/high-level-design.md`, and `working/design-review-results.md`;
-   Stage 3 cannot start while either marker is missing or stale.
-6. ONLY run a file existence check for `working/spec.md`.
-7. If missing or stale relative to `proposal.md` or
-   `working/high-level-design.md`, dispatch spec-writer with the exact prompt
+   `RUN/proposal-approved.md`, `RUN/proposal.md`,
+   `RUN/proposal-review-results.md`, `RUN/design-approved.md`,
+   `RUN/high-level-design.md`, and `RUN/design-review-results.md`; Stage 3
+   cannot start while either marker is missing or stale.
+6. ONLY run a file existence check for `RUN/spec.md`.
+7. If missing or stale relative to `RUN/proposal.md` or
+   `RUN/high-level-design.md`, dispatch spec-writer with the exact prompt
    format.
-8. ONLY run a file existence check for `working/spec.md`.
+8. ONLY run a file existence check for `RUN/spec.md`.
 9. Dispatch planner with the exact prompt format.
 10. Dispatch plan-reviewer with the exact prompt format.
-11. ONLY count `Status: Pending` in `working/plan-review-results.md`.
+11. ONLY count `Status: Pending` in `RUN/plan-review-results.md`.
 12. If count is greater than zero, dispatch planner again, then plan-reviewer
-   again. Repeat until the count is zero or three planner/plan-reviewer cycles
-   have completed.
+    again. Repeat until the count is zero or three planner/plan-reviewer cycles
+    have completed.
 13. If three planner/plan-reviewer cycles complete and pending issues remain,
-   write `working/execution-budget.md` with the plan-review pending count and
-   stop for the user.
+    write `RUN/execution-budget.md` with the plan-review pending count and stop
+    for the user.
 14. If count is zero, ONLY count task files matching
-   `working/plan/task-NNN/task.md`.
-15. If the task count is greater than six, write `working/execution-budget.md`
-   with the task count and ask for explicit long-run approval. Do not enter
-   Stage 4 until `working/execution-approved.md` exists and is newer than
-   `working/plan-review-results.md`.
+    `RUN/plan/task-NNN/task.md`.
+15. If the task count is greater than six, write `RUN/execution-budget.md` with
+    the task count and ask for explicit long-run approval. Do not enter Stage 4
+    until `RUN/execution-approved.md` exists and is newer than
+    `RUN/plan-review-results.md`.
 
 ## Stage 4 Exact File Checks
 
-1. ONLY list tasks from `working/plan/task-NNN/task.md`.
-2. ONLY check `working/execution-budget.md` and
-   `working/execution-approved.md`. If the reviewed plan exceeds the unattended
-   budget and approval is missing or stale, stop and return
-   `working/execution-budget.md`.
-3. For each task in numeric order, update `working/runtime-metrics.md` and
-   dispatch implementer with the exact prompt
-   format.
-4. ONLY run file existence checks for
-   `working/plan/task-NNN/test-results.md` and
-   `working/plan/task-NNN/changes.md`.
-5. ONLY read the status line in `working/plan/task-NNN/test-results.md`.
-6. If status is not `EXPECTED`, update `working/runtime-metrics.md`. If this is
-   the third full cycle for the task, write
-   `working/plan/task-NNN/loop-issues.md` and stop; otherwise dispatch
-   implementer again.
+1. ONLY list tasks from `RUN/plan/task-NNN/task.md`.
+2. ONLY check `RUN/execution-budget.md` and `RUN/execution-approved.md`. If the
+   reviewed plan exceeds the unattended budget and approval is missing or stale,
+   stop and return `RUN/execution-budget.md`.
+3. For each task in numeric order, update `RUN/runtime-metrics.md` and dispatch
+   implementer with the exact prompt format.
+4. ONLY run file existence checks for `RUN/plan/task-NNN/test-results.md` and
+   `RUN/plan/task-NNN/changes.md`.
+5. ONLY read the status line in `RUN/plan/task-NNN/test-results.md`.
+6. If status is not `EXPECTED`, update `RUN/runtime-metrics.md`. If this is the
+   third full cycle for the task, write `RUN/plan/task-NNN/loop-issues.md` and
+   stop; otherwise dispatch implementer again.
 7. If status is `EXPECTED`, dispatch spec-reviewer with the exact prompt format
    and wait for completion. Then dispatch code-reviewer with the exact prompt
    format and wait for completion. Never dispatch these two reviewers in
    parallel.
 8. ONLY count `Status: Pending` in
-   `working/plan/task-NNN/implement-review-results.md`.
-9. If count is greater than zero, update `working/runtime-metrics.md`. If this
-   is the third full implementer -> spec-reviewer -> code-reviewer cycle for the
-   task, write `working/plan/task-NNN/loop-issues.md` and stop; otherwise
-   dispatch implementer again, then reviewers again.
+   `RUN/plan/task-NNN/implement-review-results.md`.
+9. If count is greater than zero, update `RUN/runtime-metrics.md`. If this is
+   the third full implementer -> spec-reviewer -> code-reviewer cycle for the
+   task, write `RUN/plan/task-NNN/loop-issues.md` and stop; otherwise dispatch
+   implementer again, then reviewers again.
 10. Move to the next numeric task. After the last task, write summary files
-   through the controller using only the task files and review files as input.
+    through the controller using only the task files and review files as input.
 
 ## Proposal Prompt Contract
 
 The main controller never invents proposal questions. It only returns
-`working/proposal-questions.md` written by proposal-writer. Use this shape:
+`RUN/proposal-questions.md` written by proposal-writer. Use this shape:
 
 ```text
-I need to clarify these points before writing proposal.md:
+I need to clarify these points before writing RUN/proposal.md:
 1. ...
 2. ...
 ```
 
 After answers are sufficient, dispatch proposal-writer again. Do not write
-`proposal.md` in the main window.
+`RUN/proposal.md` in the main window.
 
 ## Proposal Approval Contract
 
-After `proposal.md` exists and `working/proposal-review-results.md` has zero
+After `RUN/proposal.md` exists and `RUN/proposal-review-results.md` has zero
 `Status: Pending` lines, the main controller returns:
 
 ```text
-proposal.md is reviewed with zero pending issues.
+RUN/proposal.md is reviewed with zero pending issues.
 Please approve the requirements document before I enter Stage 2.
 Accepted approvals: OK proposal, approve proposal, 确认需求文档.
 ```
 
-Do not dispatch design-writer until `working/proposal-approved.md` exists.
-If the marker is older than `proposal.md` or
-`working/proposal-review-results.md`, treat it as missing.
+Do not dispatch design-writer until `RUN/proposal-approved.md` exists.
+If the marker is older than `RUN/proposal.md` or
+`RUN/proposal-review-results.md`, treat it as missing.
 
 ## Design Prompt Contract
 
 The main controller never invents design questions. It only returns
-`working/design-questions.md` written by design-writer. Use this shape:
+`RUN/design-questions.md` written by design-writer. Use this shape:
 
 ```text
-I need these design decisions before writing working/high-level-design.md:
+I need these design decisions before writing RUN/high-level-design.md:
 1. ...
 2. ...
 ```
 
 After answers are sufficient, dispatch design-writer again. Do not write
-`working/high-level-design.md` in the main window.
+`RUN/high-level-design.md` in the main window.
 
 ## Design Approval Contract
 
-After `working/high-level-design.md` exists and
-`working/design-review-results.md` has zero `Status: Pending` lines, the main
+After `RUN/high-level-design.md` exists and
+`RUN/design-review-results.md` has zero `Status: Pending` lines, the main
 controller returns:
 
 ```text
-working/high-level-design.md is reviewed with zero pending issues.
+RUN/high-level-design.md is reviewed with zero pending issues.
 Please approve the high-level design before I enter Stage 3.
 Accepted approvals: OK design, approve design, 确认概要设计.
 ```
 
 Do not dispatch spec-writer, planner, or implementer until
-`working/design-approved.md` exists.
-If the marker is older than `working/high-level-design.md` or
-`working/design-review-results.md`, treat it as missing.
+`RUN/design-approved.md` exists.
+If the marker is older than `RUN/high-level-design.md` or
+`RUN/design-review-results.md`, treat it as missing.
 
 ## Runtime Budget Contract
 
@@ -509,12 +578,12 @@ When a budget is exceeded, the controller writes the relevant guard file and
 waits:
 
 ```text
-working/execution-budget.md
-working/plan/task-NNN/loop-issues.md
+RUN/execution-budget.md
+RUN/plan/task-NNN/loop-issues.md
 ```
 
 Large-plan execution resumes only after explicit approval such as
-`OK long run`; the controller then writes `working/execution-approved.md`.
+`OK long run`; the controller then writes `RUN/execution-approved.md`.
 Repeated-review loops do not auto-resume. The user must inspect the loop issue
 and explicitly direct the next action.
 

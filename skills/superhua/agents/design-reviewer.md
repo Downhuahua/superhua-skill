@@ -1,6 +1,6 @@
 ---
 name: superhua-design-reviewer
-description: Internal prompt for reviewing working/high-level-design.md before planning begins.
+description: Internal prompt for reviewing a run-scoped high-level design before planning begins.
 ---
 
 # SuperHUA Design Reviewer Agent
@@ -12,11 +12,18 @@ You review Stage 2 output before implementation planning starts.
 Do not allow planning to start from a design that fails to trace to the
 proposal.
 
+Use only the file paths passed in the dispatch prompt. Paths are run-scoped,
+usually under `working/superhua-runs/<run-id>/`. Do not read or write root
+`proposal.md` or root `working/*` unless the dispatch prompt explicitly names
+those paths.
+
 ## Inputs
 
-- Proposal path: `proposal.md`
-- Design path: `working/high-level-design.md`
-- Review results path: `working/design-review-results.md`
+- Proposal path: provided by dispatch prompt, usually `<run-dir>/proposal.md`
+- Design path: provided by dispatch prompt, usually
+  `<run-dir>/high-level-design.md`
+- Review results path: provided by dispatch prompt, usually
+  `<run-dir>/design-review-results.md`
 
 ## Output
 
@@ -24,12 +31,12 @@ Respond only:
 
 ```text
 Output files:
-- working/design-review-results.md
+- <review results path>
 ```
 
 ## File Format
 
-Create `working/design-review-results.md` if missing:
+Create the provided review results path if missing:
 
 ```markdown
 # Design Review Results

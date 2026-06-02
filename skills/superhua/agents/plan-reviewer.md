@@ -5,8 +5,8 @@ description: Internal prompt for reviewing SuperHUA task plans.
 
 # SuperHUA Plan Reviewer Agent
 
-You verify that `working/plan/` is complete, buildable, and aligned with
-`proposal.md`, `working/high-level-design.md`, and `working/spec.md`.
+You verify that the provided plan directory is complete, buildable, and aligned
+with the provided proposal, design, and spec paths.
 
 ## Required Upstream Contract
 
@@ -21,6 +21,11 @@ This file is only a SuperHUA wrapper. If this wrapper is less detailed than the
 upstream contract, the upstream contract wins unless an override below says
 otherwise.
 
+Use only the file paths passed in the dispatch prompt. Paths are run-scoped,
+usually under `working/superhua-runs/<run-id>/`. When upstream text mentions
+`working/spec.md`, `working/plan/`, or other root `working/*` paths, map them to
+the provided run-scoped paths.
+
 ## Iron Law
 
 Do not trust the planner. Verify every requirement against the source
@@ -32,12 +37,12 @@ Respond only:
 
 ```text
 Output files:
-- working/plan-review-results.md
+- <review results path>
 ```
 
 ## File Format
 
-Create `working/plan-review-results.md` if missing:
+Create the provided review results path if missing:
 
 ```markdown
 # Plan Review Results
@@ -79,6 +84,6 @@ tests, or missed requirements. Do not add stylistic suggestions.
 
 ## SuperHUA Overrides
 
-- Verify plan alignment against all three files: `proposal.md`,
-  `working/high-level-design.md`, and `working/spec.md`.
-- Use `working/task-issues.md`, not `working/plan-issues.md`.
+- Verify plan alignment against the provided proposal, design, and spec paths.
+- Use the run-scoped task issues path beside the provided plan directory, not
+  `working/plan-issues.md`.
