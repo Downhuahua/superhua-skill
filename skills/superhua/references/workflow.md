@@ -96,10 +96,12 @@ Approvals and runtime state:
 - `RUN/runtime-metrics.md`
 - `RUN/process/*`
 - `RUN/spec.md`
+- `RUN/spec-issues.md`: spec-writer blocker or assumption log. Fresh entries
+  with `Status: Blocked` or `Status: Needs User` stop Stage 6 when
+  `RUN/spec.md` is missing or stale.
 - `RUN/plan/task-NNN/task.md`
 - `RUN/plan/task-NNN/test-results.md`
 - `RUN/plan/task-NNN/changes.md`
-- `RUN/spec-issues.md`
 - `RUN/task-issues.md`
 - `RUN/env-issues.md`
 - `RUN/execution-budget.md`
@@ -583,28 +585,38 @@ Require `RUN/task-profile.md` with `Mode: spec-full`, then run Stages 1-6.
 2. Treat `RUN/doc/prompt.md` as the Stage 6 execution charter. `spec-writer`,
    `planner`, `implementer`, `spec-reviewer`, and `code-reviewer` must read and
    preserve its execution rules.
-3. Dispatch spec-writer if `RUN/spec.md` is missing or stale relative to any
-   Stage 1-5 deliverable.
-4. Dispatch planner.
-5. Dispatch plan-reviewer.
-6. Count `Status: Pending` in `RUN/plan-review-results.md`.
-7. Repeat planner/plan-reviewer until zero pending issues or three cycles.
-8. If pending issues remain after three cycles, write
+3. Determine whether `RUN/spec.md` is fresh relative to all Stage 1-5
+   deliverables.
+4. If `RUN/spec.md` is missing or stale, check `RUN/spec-issues.md`. If that
+   file is fresh relative to Stage 1-5 deliverables and contains
+   `Status: Blocked` or `Status: Needs User`, stop and surface
+   `RUN/spec-issues.md`.
+5. Dispatch spec-writer only when `RUN/spec.md` is missing or stale and there
+   is no fresh blocking `RUN/spec-issues.md`.
+6. After spec-writer returns, repeat the same check. If `RUN/spec.md` is still
+   missing or stale and `RUN/spec-issues.md` is fresh with `Status: Blocked` or
+   `Status: Needs User`, stop and surface `RUN/spec-issues.md`. Do not dispatch
+   planner from a missing or stale `RUN/spec.md`.
+7. Require fresh `RUN/spec.md`, then dispatch planner.
+8. Dispatch plan-reviewer.
+9. Count `Status: Pending` in `RUN/plan-review-results.md`.
+10. Repeat planner/plan-reviewer until zero pending issues or three cycles.
+11. If pending issues remain after three cycles, write
    `RUN/execution-budget.md` and stop.
-9. Count internal tasks matching `RUN/plan/task-NNN/task.md`.
-10. If the task count is greater than six, write `RUN/execution-budget.md` and
+12. Count internal tasks matching `RUN/plan/task-NNN/task.md`.
+13. If the task count is greater than six, write `RUN/execution-budget.md` and
    wait for explicit `OK long run`; then write `RUN/execution-approved.md`.
-11. Execute each internal task in numeric order with implementer.
-12. Require `RUN/plan/task-NNN/test-results.md` and
+14. Execute each internal task in numeric order with implementer.
+15. Require `RUN/plan/task-NNN/test-results.md` and
     `RUN/plan/task-NNN/changes.md`.
-13. If test status is not `EXPECTED`, retry implementer within the three-cycle
+16. If test status is not `EXPECTED`, retry implementer within the three-cycle
     task budget or write `RUN/plan/task-NNN/loop-issues.md`.
-14. Dispatch spec-reviewer, then code-reviewer, serially.
-15. Count `Status: Pending` in
+17. Dispatch spec-reviewer, then code-reviewer, serially.
+18. Count `Status: Pending` in
     `RUN/plan/task-NNN/implement-review-results.md`.
-16. Retry implementer/reviewers until zero pending issues or the three-cycle
+19. Retry implementer/reviewers until zero pending issues or the three-cycle
     task budget is exceeded.
-17. After the last task, write `RUN/commit-message.md` and
+20. After the last task, write `RUN/commit-message.md` and
     `RUN/task-summary.md` through the controller using only file outputs.
 
 ## Prompt Contracts

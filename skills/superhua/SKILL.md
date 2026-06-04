@@ -204,11 +204,13 @@ Approvals and runtime state:
 - `RUN/approvals/design-approved.md`
 - `RUN/spec.md`: internal Superteam-compatible spec synthesized after
   `prompt.md`.
+- `RUN/spec-issues.md`: spec-writer blocker or assumption log. Fresh entries
+  marked `Status: Blocked` or `Status: Needs User` stop Stage 6 when
+  `RUN/spec.md` is missing or stale.
 - `RUN/plan/task-NNN/task.md`: internal executable tasks for Stage 6.
 - `RUN/execution-budget.md`
 - `RUN/execution-approved.md`
 - `RUN/runtime-metrics.md`
-- `RUN/spec-issues.md`
 - `RUN/task-issues.md`
 - `RUN/env-issues.md`
 - `RUN/plan/task-NNN/loop-issues.md`
@@ -443,15 +445,19 @@ engine:
 1. Dispatch `agents/spec-writer.md` to synthesize `RUN/spec.md` from
    `RUN/doc/proposal.md`, `RUN/doc/high-level-design.md`,
    `RUN/doc/detailed-design.md`, `RUN/doc/tasks/`, and `RUN/doc/prompt.md`.
-2. Dispatch `agents/planner.md` to create internal executable tasks under
+2. Before planning, require a fresh `RUN/spec.md`. If `RUN/spec.md` is missing
+   or stale and a fresh `RUN/spec-issues.md` contains `Status: Blocked` or
+   `Status: Needs User`, stop and surface `RUN/spec-issues.md`. Do not dispatch
+   planner from a missing or stale `RUN/spec.md`.
+3. Dispatch `agents/planner.md` to create internal executable tasks under
    `RUN/plan/task-NNN/task.md`.
-3. Dispatch `agents/plan-reviewer.md`; loop until zero `Status: Pending` or the
+4. Dispatch `agents/plan-reviewer.md`; loop until zero `Status: Pending` or the
    planning runtime budget is hit.
-4. Execute internal tasks serially with `agents/implementer.md`.
-5. After each task, run `agents/spec-reviewer.md` and
+5. Execute internal tasks serially with `agents/implementer.md`.
+6. After each task, run `agents/spec-reviewer.md` and
    `agents/code-reviewer.md` serially. Never run them in parallel because they
    share `implement-review-results.md`.
-6. Fix every `Status: Pending` issue and review again within the runtime
+7. Fix every `Status: Pending` issue and review again within the runtime
    budget.
 
 Default unattended planning budget:
@@ -496,6 +502,9 @@ Only these SuperHUA overrides apply:
 - Upstream root `working/*` examples map to the selected `RUN` paths.
 - `RUN/doc/prompt.md` is the Stage 6 execution charter.
 - `agents/spec-writer.md` synthesizes internal `RUN/spec.md`.
+- `RUN/spec-issues.md` is the spec-writer blocker signal. A fresh
+  `RUN/spec-issues.md` with `Status: Blocked` or `Status: Needs User` and a
+  missing or stale `RUN/spec.md` stops before planner.
 - `RUN/task-issues.md` replaces upstream `working/plan-issues.md`.
 - Do not use the upstream Claude plugin namespace.
 - Do not make commits unless the user explicitly asks.

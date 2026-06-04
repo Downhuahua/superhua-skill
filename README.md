@@ -133,9 +133,17 @@ Validate the packaged skill:
 python ~/.codex/skills/.system/skill-creator/scripts/quick_validate.py skills/superhua
 ```
 
+On Windows PowerShell, run from the repository root and force UTF-8 mode before
+validation:
+
+```powershell
+$env:PYTHONUTF8='1'; python "$env:USERPROFILE\.codex\skills\.system\skill-creator\scripts\quick_validate.py" "$PWD\skills\superhua"
+```
+
 ## Licensing Note
 
 The upstream `abadcafe/superteam` repository did not include an explicit license
 in the snapshot used here. This package is intended for workflow analysis and
-sharing; choose an appropriate license only after confirming rights for the
-bundled upstream content.
+sharing, but public redistribution risk is not locally resolved by these edits.
+Public redistribution requires upstream rights confirmation or explicit
+permission for the bundled upstream content.

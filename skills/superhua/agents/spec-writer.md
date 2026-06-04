@@ -35,13 +35,21 @@ Create parent directories for every provided output path before writing files.
 - Spec issues path: provided by dispatch prompt, usually
   `<run-dir>/spec-issues.md`
 
-## Output
+## Outputs
 
-Respond only:
+On success, write the provided spec path and respond only:
 
 ```text
 Output files:
 - <spec path>
+```
+
+On a blocking conflict, write only the provided spec issues path and respond
+only:
+
+```text
+Output files:
+- <spec issues path>
 ```
 
 ## Requirements
@@ -59,6 +67,13 @@ Output files:
 - If the documents conflict, record the conflict in the provided spec issues
   path with an assumption only if the conflict is non-blocking. If it changes
   user intent, do not write the provided spec path.
+- Blocking conflicts must be written to the provided spec issues path with
+  `Status: Blocked` when the documents are internally contradictory, or
+  `Status: Needs User` when a user decision is required before a valid internal
+  spec can exist.
+- A blocking spec issues file is not a spec. When writing `Status: Blocked` or
+  `Status: Needs User`, do not write the provided spec path and do not claim
+  execution can continue.
 
 ## Format
 
