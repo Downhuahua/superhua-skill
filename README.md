@@ -11,9 +11,19 @@ skills/superhua/
 ```
 
 `superhua` is a Codex-local adaptation of
-[abadcafe/superteam](https://github.com/abadcafe/superteam). It turns a manual
-VibeCoding preparation flow into a run-scoped automation without dropping the
-human judgment gates:
+[abadcafe/superteam](https://github.com/abadcafe/superteam). It now adds an
+Easy-Vibe-style task router before execution, so small tasks do not pay the full
+Spec Coding cost. Every run starts by choosing one mode:
+
+- `vibe-lite`: clear, low-risk work with one executor and targeted
+  verification.
+- `vibe-standard`: moderate work with proposal/design alignment, then one
+  bounded executor.
+- `spec-full`: the original full Superteam-compatible chain for complex,
+  risky, multi-module, production, research-heavy, or explicitly full tasks.
+
+The full `spec-full` flow still turns a manual VibeCoding preparation flow into
+a run-scoped automation without dropping the human judgment gates:
 
 1. `RUN/doc/proposal.md` through a proposal writer, reviewer, and explicit user
    approval.
@@ -39,11 +49,12 @@ prompt, plan, or execution state. Legacy root files such as `proposal.md`,
 root `doc/`, or `working/plan/` are reported as legacy state and are not treated
 as the active run.
 
-SuperHUA works unattended only after `RUN/doc/prompt.md` is reviewed with zero
-pending issues. It still stops for questions during detailed design, task
-splitting, and prompt generation when a missing answer would change intent or
-execution behavior. During execution, Python projects must pass pytest, mypy,
-and ruff unless the user explicitly changes that rule.
+SuperHUA works unattended in `spec-full` only after `RUN/doc/prompt.md` is
+reviewed with zero pending issues. It still stops for questions during detailed
+design, task splitting, and prompt generation when a missing answer would
+change intent or execution behavior. Lite and standard modes use targeted
+verification instead of forcing full pytest/mypy/ruff on non-code or small
+tasks.
 
 The upstream Superteam snapshot is bundled under
 `skills/superhua/references/upstream-superteam/` and pinned to commit:
@@ -87,21 +98,23 @@ Input:
 
 Output:
 Create a new run under working/superhua-runs/<run-id>/.
-Create RUN/doc/proposal.md first.
-Then create RUN/doc/high-level-design.md.
-After RUN/doc/proposal.md is reviewed, stop and wait for my explicit approval
-before high-level design.
-After RUN/doc/high-level-design.md is reviewed, stop and wait for my explicit
-approval before detailed design.
-Then create RUN/doc/detailed-design.md, RUN/doc/tasks/<module-name>.md,
-RUN/doc/tasks/progress.md, and RUN/doc/prompt.md.
-If any of those stages is unclear, ask me questions before continuing.
-After RUN/doc/prompt.md is reviewed, execute it automatically.
+First create RUN/task-profile.md and choose vibe-lite, vibe-standard, or
+spec-full.
+For small clear tasks, use vibe-lite and finish with RUN/lite-summary.md.
+For moderate tasks, use vibe-standard: create RUN/doc/proposal.md, wait for my
+approval, create RUN/doc/high-level-design.md, wait for my approval, then
+execute and finish with RUN/standard-summary.md.
+For complex tasks, use spec-full: create RUN/doc/proposal.md and
+RUN/doc/high-level-design.md as separate approval gates, then continue through
+RUN/doc/detailed-design.md, RUN/doc/tasks/<module-name>.md,
+RUN/doc/tasks/progress.md, RUN/doc/prompt.md, and automated execution.
+If any selected mode is unclear, ask me questions before continuing.
 
 Rules:
 Ask me questions for unclear requirements, design choices, task boundaries, or
 prompt execution rules.
 Do not guess my intent.
+Use the lightest safe mode; do not force spec-full on simple tasks.
 Do not merge proposal, high-level design, detailed design, tasks, or prompt into
 one step.
 Do not write SuperHUA process files to the project root.

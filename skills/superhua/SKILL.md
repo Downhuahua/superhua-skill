@@ -5,12 +5,23 @@ description: Use when the user asks to use SuperHUA/superhua or continue a Super
 
 # SuperHUA
 
-SuperHUA is a Codex-local adaptation of `abadcafe/superteam`. It preserves the
-original Superteam state-machine discipline, fresh-agent execution, review
-loops, and `Status: Pending` convergence model, but turns the user's former
-manual VibeCoding preparation flow into a run-scoped automation.
+SuperHUA is a Codex-local adaptation of `abadcafe/superteam` with
+Easy-Vibe-style task routing. It preserves the original Superteam
+state-machine discipline, fresh-agent execution, review loops, and
+`Status: Pending` convergence model for work that actually needs it, while
+keeping small tasks out of the full six-stage path.
 
-The required document chain is:
+The controller always starts with Stage 0 task routing. The router chooses one
+mode:
+
+- `vibe-lite`: one clear, low-risk task. Use one executor and immediate
+  verification.
+- `vibe-standard`: moderate work that benefits from proposal/design alignment
+  but does not need detailed design, module task files, and prompt synthesis.
+- `spec-full`: complex, risky, multi-module, long-running, production, or
+  explicitly requested full Superteam-compatible execution.
+
+The `spec-full` document chain is:
 
 1. `RUN/doc/proposal.md`
 2. `RUN/doc/high-level-design.md`
@@ -20,12 +31,16 @@ The required document chain is:
 6. Execute `RUN/doc/prompt.md` through internal Superteam-compatible planning,
    implementation, testing, and review.
 
-Stages 1 and 2 require explicit human approval after zero-pending review.
-Stages 3, 4, and 5 are still question-gated: if anything would change user
-intent, architecture, module boundaries, task scope, tests, or execution rules,
-the writer agent must ask questions and the controller must wait. After Stage 5
-is reviewed with zero pending issues, Stage 6 runs hands-off except for real
-blockers and runtime guardrails.
+In `spec-full`, Stages 1 and 2 require explicit human approval after
+zero-pending review. Stages 3, 4, and 5 are still question-gated: if anything
+would change user intent, architecture, module boundaries, task scope, tests, or
+execution rules, the writer agent must ask questions and the controller must
+wait. After Stage 5 is reviewed with zero pending issues, Stage 6 runs
+hands-off except for real blockers and runtime guardrails.
+
+Easy-Vibe operating principle: one clear task, one appropriately sized workflow,
+then verify. Do not use `spec-full` merely because the user said "use
+SuperHUA".
 
 ## Run Scope
 
@@ -64,15 +79,19 @@ The main controller must not write deliverables:
 - `RUN/doc/prompt.md`
 - `RUN/spec.md`
 - `RUN/plan/task-NNN/task.md`
+- `RUN/task-profile.md`
+- `RUN/lite-summary.md`
+- `RUN/standard-summary.md`
 
 It may only:
 
 - Select or create run directories.
 - Create required run subdirectories such as `RUN/doc`, `RUN/questions`,
-  `RUN/reviews`, `RUN/approvals`, and `RUN/plan` before dispatching agents that
-  write inside them.
+  `RUN/reviews`, `RUN/approvals`, `RUN/plan`, and `RUN/process` before
+  dispatching agents that write inside them.
 - Maintain `working/superhua-current.md` and `working/superhua-index.md`.
 - Record the user's original request and answers in `RUN/user-input.md`.
+- Write `RUN/mode.md` from the exact selected mode in `RUN/task-profile.md`.
 - Dispatch the next required fresh agent using the exact prompt formats in
   `references/workflow.md`.
 - Read exact output files produced by agents.
@@ -120,6 +139,8 @@ NEVER:
 
 - Skip a stage.
 - Combine two stages into one prompt, context, agent call, or output pass.
+- Force `spec-full` on a lite or standard task.
+- Run long research collection without an explicit source/evidence cap.
 - Dispatch a child agent with extra context outside the exact prompt format.
 - Let a child agent write outside its provided run-scoped paths.
 - Treat review success as human approval.
@@ -132,6 +153,20 @@ NEVER:
 
 ## File Contracts
 
+Mode and routing:
+
+- `RUN/task-profile.md`: router output with selected mode, confidence, evidence
+  cap, risk level, verification plan, and reason.
+- `RUN/mode.md`: controller-owned copy of the selected mode.
+- `RUN/questions/router-questions.md`
+
+Lite/standard execution:
+
+- `RUN/lite-summary.md`
+- `RUN/standard-summary.md`
+- `RUN/process/*`: optional bounded process artifacts. Research and evidence
+  collection artifacts must stay bounded by `RUN/task-profile.md`.
+
 Human-visible deliverables:
 
 - `RUN/doc/proposal.md`
@@ -143,6 +178,9 @@ Human-visible deliverables:
 
 Questions:
 
+- `RUN/questions/router-questions.md`
+- `RUN/questions/lite-questions.md`
+- `RUN/questions/standard-questions.md`
 - `RUN/questions/proposal-questions.md`
 - `RUN/questions/design-questions.md`
 - `RUN/questions/detailed-design-questions.md`
@@ -161,6 +199,7 @@ Reviews:
 
 Approvals and runtime state:
 
+- `RUN/mode.md`
 - `RUN/approvals/proposal-approved.md`
 - `RUN/approvals/design-approved.md`
 - `RUN/spec.md`: internal Superteam-compatible spec synthesized after
@@ -184,6 +223,14 @@ must be reported as legacy state and must not be treated as the selected run.
 Run this check first from the project root:
 
 - If no run is selected, select or create a run using the Run Scope rules.
+- If `RUN/task-profile.md` is missing: Stage 0.
+- If `RUN/questions/router-questions.md` exists and is non-empty: return it and
+  wait.
+- If `RUN/task-profile.md` exists but `RUN/mode.md` is missing: write
+  `RUN/mode.md` from the exact selected mode in `RUN/task-profile.md`.
+- If `RUN/mode.md` is `vibe-lite`: run the Lite Flow.
+- If `RUN/mode.md` is `vibe-standard`: run the Standard Flow.
+- If `RUN/mode.md` is `spec-full`: run the Spec-Full Flow below.
 - If `RUN/doc/proposal.md` is missing: Stage 1.
 - If proposal review is missing or has `Status: Pending`: Stage 1 review loop.
 - If `RUN/approvals/proposal-approved.md` is missing or stale: return the
@@ -207,6 +254,89 @@ the user and wait before dispatching the next writer or reviewer.
 If the user explicitly asks to redo a stage, redo only that stage and downstream
 generated files that depend on it. Remove stale approval markers and downstream
 automation files before continuing.
+
+## Stage 0: Task Router
+
+Goal: choose the lightest workflow that can safely satisfy the request.
+
+Rules:
+
+- Dispatch `agents/task-router.md`.
+- If the task is unclear enough that choosing a mode would guess user intent,
+  return `RUN/questions/router-questions.md` and wait.
+- The router writes `RUN/task-profile.md`.
+- The controller writes `RUN/mode.md` from the exact selected mode in
+  `RUN/task-profile.md`.
+- Respect explicit user mode requests:
+  - `lite`, `vibe-lite`, "quick", "小任务", or "轻量" prefer `vibe-lite`.
+  - `standard`, "标准", or "先对齐再做" prefer `vibe-standard`.
+  - `full`, `spec-full`, "完整流程", "长任务", or "OK long run" prefer
+    `spec-full`.
+- If explicit mode conflicts with risk, choose the safer mode and explain the
+  reason in `RUN/task-profile.md`.
+
+Routing rules:
+
+- Choose `vibe-lite` for clear, low-risk tasks touching at most two files, small
+  document edits, simple bug fixes with reproduction, formatting, minor
+  configuration, or one-shot inspection/reporting.
+- Choose `vibe-standard` for moderate changes touching several files, small
+  skill updates, non-trivial bug fixes, or tasks that need requirements/design
+  alignment but not full detailed design/module task/prompt generation.
+- Choose `spec-full` only for complex or high-risk work: multi-module
+  refactors, new product/system builds, ambiguous architecture, irreversible
+  external writes, security-sensitive work, broad research synthesis,
+  production-grade delivery, or user-requested full automation.
+- Research tasks default to a capped mode. The router must set a concrete
+  evidence cap, normally 10-20 accepted records, unless the user explicitly asks
+  for deep research.
+
+## Lite Flow
+
+Goal: finish one clear task with minimal process overhead.
+
+Rules:
+
+- Dispatch `agents/lite-executor.md`.
+- If `RUN/lite-summary.md` already exists and is fresh relative to
+  `RUN/task-profile.md` and `RUN/user-input.md`, report it instead of
+  dispatching again.
+- If ambiguity remains, return `RUN/questions/lite-questions.md` and wait.
+- The executor may read relevant project files, make the requested bounded
+  change, run targeted verification, and write `RUN/lite-summary.md`.
+- It must not create proposal/design/task/prompt files.
+- It must not run broad test suites unless needed for the changed files.
+- For non-code tasks, do not run pytest, mypy, or ruff unless the user asked or
+  the task touches Python code.
+- Completion requires `RUN/lite-summary.md` with changed files, verification,
+  and residual risk.
+
+## Standard Flow
+
+Goal: align first, then execute a moderate task without full Spec-Full overhead.
+
+Rules:
+
+- Run Stage 1 and Stage 2 exactly, including explicit approvals.
+- After design approval, dispatch `agents/standard-executor.md`.
+- If `RUN/standard-summary.md` already exists and is fresh relative to
+  `RUN/task-profile.md`, `RUN/doc/proposal.md`, and
+  `RUN/doc/high-level-design.md`, report it instead of dispatching again.
+- If ambiguity remains, return `RUN/questions/standard-questions.md` and wait.
+- The executor writes `RUN/standard-summary.md`.
+- It must not create `RUN/doc/detailed-design.md`, `RUN/doc/tasks/*`,
+  `RUN/doc/prompt.md`, `RUN/spec.md`, or `RUN/plan/task-NNN/task.md`.
+- It should implement in one to three small steps, verifying after each step.
+- It may run targeted tests and quality checks relevant to changed files. It
+  runs full pytest/mypy/ruff only when Python code changes require that level
+  of confidence or the user explicitly asks.
+- Do not run broad test suites unless the approved design or changed files
+  require them.
+- If work expands beyond three steps, touches more than five files, or needs
+  long-running automation, write `RUN/execution-budget.md` and ask whether to
+  promote to `spec-full`.
+
+## Spec-Full Flow
 
 ## Stage 1: Proposal
 
@@ -373,6 +503,8 @@ Only these SuperHUA overrides apply:
 ## Supporting Files
 
 - `references/workflow.md`: full file contracts and exact prompt formats.
+- `agents/task-router.md`
+- `agents/lite-executor.md`, `agents/standard-executor.md`
 - `agents/proposal-writer.md`, `agents/proposal-reviewer.md`
 - `agents/design-writer.md`, `agents/design-reviewer.md`
 - `agents/detailed-design-writer.md`, `agents/detailed-design-reviewer.md`
@@ -385,6 +517,8 @@ Only these SuperHUA overrides apply:
 
 ## Common Mistakes
 
+- Treating SuperHUA as always-heavy. Route first; use the lightest safe mode.
+- Running research without an evidence cap.
 - Treating Stage 3-5 as "automatic, no questions allowed." They are automatic
   only when the source documents are clear.
 - Replacing `RUN/doc/tasks/*.md` with internal `RUN/plan/task-NNN/task.md`.

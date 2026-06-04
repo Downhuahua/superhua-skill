@@ -10,13 +10,16 @@ Codex adaptation:
 
 - Skill name: `superhua`.
 - Claude plugin namespace references were removed.
-- The user's manual VibeCoding preparation chain is preserved as
-  `proposal -> high-level-design -> detailed-design -> module tasks -> prompt`.
+- Easy-Vibe-style task routing was added before the heavy workflow.
+- The user's manual VibeCoding preparation chain is preserved for `spec-full`
+  as `proposal -> high-level-design -> detailed-design -> module tasks ->
+  prompt`.
 - All process files are scoped to a SuperHUA run directory so multiple tasks can
   coexist in one project repository.
-- Stage 1 and Stage 2 require explicit human approval after review.
-- Stages 3-5 are question-gated but do not require approval markers.
-- Stage 6 uses upstream Superteam planning/execution as the internal engine.
+- `vibe-lite` runs one bounded executor and targeted verification.
+- `vibe-standard` runs proposal/design approval and one bounded executor.
+- `spec-full` uses upstream Superteam planning/execution as the internal
+  engine.
 - Commits are not made unless the user asks.
 
 ## Run Scope
@@ -53,6 +56,11 @@ Run selection rules:
 
 Human-visible deliverables:
 
+- `RUN/task-profile.md`: selected mode, reason, caps, risk, and verification
+  plan.
+- `RUN/mode.md`: selected mode copied by the controller.
+- `RUN/lite-summary.md`: lite execution summary.
+- `RUN/standard-summary.md`: standard execution summary.
 - `RUN/doc/proposal.md`: requirements document.
 - `RUN/doc/high-level-design.md`: module-level design.
 - `RUN/doc/detailed-design.md`: detailed design.
@@ -62,6 +70,9 @@ Human-visible deliverables:
 
 Questions:
 
+- `RUN/questions/router-questions.md`
+- `RUN/questions/lite-questions.md`
+- `RUN/questions/standard-questions.md`
 - `RUN/questions/proposal-questions.md`
 - `RUN/questions/design-questions.md`
 - `RUN/questions/detailed-design-questions.md`
@@ -83,6 +94,7 @@ Approvals and runtime state:
 - `RUN/approvals/proposal-approved.md`
 - `RUN/approvals/design-approved.md`
 - `RUN/runtime-metrics.md`
+- `RUN/process/*`
 - `RUN/spec.md`
 - `RUN/plan/task-NNN/task.md`
 - `RUN/plan/task-NNN/test-results.md`
@@ -132,6 +144,47 @@ Dispatch means:
   `RUN/plan/task-NNN/implement-review-results.md`.
 - Do not parallelize SuperHUA role agents unless the workflow explicitly says a
   pair is independent. The default is serial execution.
+
+### task-router
+
+```text
+- Prompt file: C:/Users/HUA/.codex/skills/superhua/agents/task-router.md
+- Run id: <run-id>
+- Run directory: RUN
+- User input path: RUN/user-input.md
+- Task profile path: RUN/task-profile.md
+- Questions path: RUN/questions/router-questions.md
+```
+
+### lite-executor
+
+```text
+- Prompt file: C:/Users/HUA/.codex/skills/superhua/agents/lite-executor.md
+- Run id: <run-id>
+- Run directory: RUN
+- User input path: RUN/user-input.md
+- Task profile path: RUN/task-profile.md
+- Questions path: RUN/questions/lite-questions.md
+- Summary path: RUN/lite-summary.md
+- Execution budget path: RUN/execution-budget.md
+- Process directory: RUN/process/
+```
+
+### standard-executor
+
+```text
+- Prompt file: C:/Users/HUA/.codex/skills/superhua/agents/standard-executor.md
+- Run id: <run-id>
+- Run directory: RUN
+- User input path: RUN/user-input.md
+- Task profile path: RUN/task-profile.md
+- Proposal path: RUN/doc/proposal.md
+- Design path: RUN/doc/high-level-design.md
+- Questions path: RUN/questions/standard-questions.md
+- Summary path: RUN/standard-summary.md
+- Execution budget path: RUN/execution-budget.md
+- Process directory: RUN/process/
+```
 
 ### proposal-writer
 
@@ -399,6 +452,9 @@ not a state signal.
 NEVER:
 
 - Skip, combine, or reorder stages.
+- Force `spec-full` when `vibe-lite` or `vibe-standard` is the lightest safe
+  mode.
+- Run uncapped research collection.
 - Fix, verify, review, plan, design, prompt-write, or implement in the main
   window.
 - Add extra content to agent prompts beyond the exact prompt formats above.
@@ -413,20 +469,64 @@ NEVER:
 
 ## Stage Checks
 
-### Stage 1: Proposal
+### Stage 0: Task Router
 
 1. Select or create `RUN`; maintain `working/superhua-current.md` and
    `working/superhua-index.md`.
 2. If `RUN/user-input.md` is missing, create it from the user's exact request.
-3. Dispatch proposal-writer.
-4. If `RUN/questions/proposal-questions.md` exists and is non-empty, return it
+3. Dispatch task-router if `RUN/task-profile.md` is missing or stale relative
+   to `RUN/user-input.md`.
+4. If `RUN/questions/router-questions.md` exists and is non-empty, return it
    and wait.
-5. Dispatch proposal-reviewer when `RUN/doc/proposal.md` exists.
-6. Count `Status: Pending` in `RUN/reviews/proposal-review-results.md`.
-7. Repeat writer/reviewer until zero pending issues.
-8. If `RUN/approvals/proposal-approved.md` is missing or stale relative to the
+5. Read `RUN/task-profile.md`.
+6. Write `RUN/mode.md` with exactly one mode: `vibe-lite`, `vibe-standard`, or
+   `spec-full`.
+7. Continue to the selected mode.
+
+### Lite Flow
+
+1. Require `RUN/task-profile.md` with `Mode: vibe-lite`.
+2. If `RUN/lite-summary.md` exists and is fresh relative to
+   `RUN/task-profile.md` and `RUN/user-input.md`, report it and stop.
+3. Dispatch lite-executor.
+4. If `RUN/questions/lite-questions.md` exists and is non-empty, return it and
+   wait.
+5. Require `RUN/lite-summary.md`.
+6. Report changed files, verification, and residual risk from the file.
+7. Do not create proposal, design, detailed-design, task, prompt, spec, or
+   plan files in this mode.
+
+### Standard Flow
+
+1. Require `RUN/task-profile.md` with `Mode: vibe-standard`.
+2. Run Stage 1 and Stage 2 exactly, including explicit approvals.
+3. If `RUN/standard-summary.md` exists and is fresh relative to
+   `RUN/task-profile.md`, `RUN/doc/proposal.md`, and
+   `RUN/doc/high-level-design.md`, report it and stop.
+4. After fresh design approval, dispatch standard-executor.
+5. If `RUN/questions/standard-questions.md` exists and is non-empty, return it
+   and wait.
+6. Require `RUN/standard-summary.md`.
+7. If `RUN/execution-budget.md` says the work exceeded standard bounds, ask
+   whether to promote to `spec-full`.
+8. Do not create detailed-design, module tasks, prompt, spec, or internal plan
+   files in this mode.
+
+### Spec-Full Flow
+
+Require `RUN/task-profile.md` with `Mode: spec-full`, then run Stages 1-6.
+
+### Stage 1: Proposal
+
+1. Dispatch proposal-writer.
+2. If `RUN/questions/proposal-questions.md` exists and is non-empty, return it
+   and wait.
+3. Dispatch proposal-reviewer when `RUN/doc/proposal.md` exists.
+4. Count `Status: Pending` in `RUN/reviews/proposal-review-results.md`.
+5. Repeat writer/reviewer until zero pending issues.
+6. If `RUN/approvals/proposal-approved.md` is missing or stale relative to the
    proposal or review file, return the reviewed proposal path and wait.
-9. Only explicit approval naming the proposal/stage writes
+7. Only explicit approval naming the proposal/stage writes
    `RUN/approvals/proposal-approved.md`.
 
 ### Stage 2: High-Level Design

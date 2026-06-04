@@ -1,4 +1,4 @@
 interface:
   display_name: "SuperHUA"
-  short_description: "Run-scoped VibeCoding workflow."
-  default_prompt: "Use $superhua to create a run-scoped proposal, high-level design, detailed design, module tasks, and prompt.md under working/superhua-runs/<run-id>/, then execute the reviewed prompt with pytest, mypy, and ruff checks."
+  short_description: "Run-scoped VibeCoding workflow with lite/standard/full routing."
+  default_prompt: "Use $superhua to route this task into the lightest safe workflow under working/superhua-runs/<run-id>. Use vibe-lite for clear small tasks, vibe-standard for moderate aligned work, and spec-full only for complex or explicitly full automation."
