@@ -16,8 +16,11 @@ Codex adaptation:
   prompt`.
 - All process files are scoped to a SuperHUA run directory so multiple tasks can
   coexist in one project repository.
-- `vibe-lite` runs one bounded executor and targeted verification.
-- `vibe-standard` runs proposal/design approval and one bounded executor.
+- `vibe-lite` runs one bounded executor and targeted verification. It is also
+  the default for known small skill-maintenance patches.
+- `vibe-standard` runs proposal/design approval and one bounded executor only
+  when requirements, architecture, workflow shape, or acceptance criteria need
+  alignment.
 - `spec-full` uses upstream Superteam planning/execution as the internal
   engine.
 - Commits are not made unless the user asks.
@@ -495,7 +498,10 @@ NEVER:
    wait.
 5. Require `RUN/lite-summary.md`.
 6. Report changed files, verification, and residual risk from the file.
-7. Do not create proposal, design, detailed-design, task, prompt, spec, or
+7. Prefer one child agent, one small patch, and one targeted verification pass.
+   For skill text patches, do not run full project quality gates unless Python
+   code changed or the user explicitly requested them.
+8. Do not create proposal, design, detailed-design, task, prompt, spec, or
    plan files in this mode.
 
 ### Standard Flow
@@ -511,7 +517,11 @@ NEVER:
 6. Require `RUN/standard-summary.md`.
 7. If `RUN/execution-budget.md` says the work exceeded standard bounds, ask
    whether to promote to `spec-full`.
-8. Do not create detailed-design, module tasks, prompt, spec, or internal plan
+8. Standard Flow should normally use no more than five role invocations:
+   proposal-writer, proposal-reviewer, design-writer, design-reviewer, and
+   standard-executor. If review loops exceed that, stop and report the loop
+   instead of continuing silently.
+9. Do not create detailed-design, module tasks, prompt, spec, or internal plan
    files in this mode.
 
 ### Spec-Full Flow

@@ -61,16 +61,23 @@ Select exactly one mode:
 - `vibe-lite`: clear, low-risk work touching at most two files; small document
   edits; simple bug fixes with reproduction; formatting; minor configuration;
   one-shot inspection/reporting; no broad research; no architectural decision.
-- `vibe-standard`: moderate work touching several files; small skill updates;
-  non-trivial bug fixes; existing-project changes that need proposal/design
-  alignment but not detailed design, module task files, or prompt synthesis.
+  Also use `vibe-lite` for bounded skill-maintenance patches touching up to
+  five known files when the findings, target files, and verification checks are
+  already known.
+- `vibe-standard`: moderate work touching several files only when it needs
+  proposal/design alignment: unclear user intent, new or changed workflow
+  architecture, acceptance criteria that need agreement, or cross-module
+  behavior where a quick patch would risk guessing. Do not route a skill update
+  to `vibe-standard` solely because the artifact being edited is a skill.
 - `spec-full`: complex or high-risk work; new product/system builds;
   multi-module refactors; unclear architecture; irreversible external writes;
   security-sensitive work; broad research synthesis; production-grade delivery;
   explicit full automation; long-running tasks with objective verification.
 
-Respect explicit user mode requests unless the requested mode is unsafe. If
-overriding the user, explain why in `Routing Reason`.
+Respect explicit user mode requests unless the requested mode is unsafe. Terms
+such as `lite`, `vibe-lite`, "quick", "小任务", "轻量", "半小时",
+"别跑重流程", or "fast patch" prefer `vibe-lite`. If overriding the user,
+explain why in `Routing Reason`.
 
 Research tasks default to capped execution. Set a concrete `Evidence Cap`,
 normally 10-20 accepted records, unless the user explicitly asks for deep

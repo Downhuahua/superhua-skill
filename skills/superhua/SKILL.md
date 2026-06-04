@@ -14,10 +14,13 @@ keeping small tasks out of the full six-stage path.
 The controller always starts with Stage 0 task routing. The router chooses one
 mode:
 
-- `vibe-lite`: one clear, low-risk task. Use one executor and immediate
-  verification.
+- `vibe-lite`: one clear, bounded task. Use one executor and immediate
+  verification. This includes small skill-maintenance patches when the issue
+  and affected files are already known.
 - `vibe-standard`: moderate work that benefits from proposal/design alignment
-  but does not need detailed design, module task files, and prompt synthesis.
+  because user intent, architecture, workflow shape, or acceptance criteria
+  need agreement, but does not need detailed design, module task files, and
+  prompt synthesis.
 - `spec-full`: complex, risky, multi-module, long-running, production, or
   explicitly requested full Superteam-compatible execution.
 
@@ -270,7 +273,8 @@ Rules:
 - The controller writes `RUN/mode.md` from the exact selected mode in
   `RUN/task-profile.md`.
 - Respect explicit user mode requests:
-  - `lite`, `vibe-lite`, "quick", "小任务", or "轻量" prefer `vibe-lite`.
+  - `lite`, `vibe-lite`, "quick", "小任务", "轻量", "半小时",
+    "别跑重流程", or "fast patch" prefer `vibe-lite`.
   - `standard`, "标准", or "先对齐再做" prefer `vibe-standard`.
   - `full`, `spec-full`, "完整流程", "长任务", or "OK long run" prefer
     `spec-full`.
@@ -282,9 +286,14 @@ Routing rules:
 - Choose `vibe-lite` for clear, low-risk tasks touching at most two files, small
   document edits, simple bug fixes with reproduction, formatting, minor
   configuration, or one-shot inspection/reporting.
-- Choose `vibe-standard` for moderate changes touching several files, small
-  skill updates, non-trivial bug fixes, or tasks that need requirements/design
-  alignment but not full detailed design/module task/prompt generation.
+- Also choose `vibe-lite` for bounded skill-maintenance patches touching up to
+  five files when the findings, target files, and verification checks are
+  already known. Do not route a skill update to `vibe-standard` solely because
+  the artifact being edited is a skill.
+- Choose `vibe-standard` for moderate changes touching several files only when
+  the work needs requirements/design alignment: unclear user intent, new or
+  changed workflow architecture, acceptance criteria that need agreement, or
+  cross-module behavior where a quick patch would risk guessing.
 - Choose `spec-full` only for complex or high-risk work: multi-module
   refactors, new product/system builds, ambiguous architecture, irreversible
   external writes, security-sensitive work, broad research synthesis,
@@ -308,6 +317,9 @@ Rules:
   change, run targeted verification, and write `RUN/lite-summary.md`.
 - It must not create proposal/design/task/prompt files.
 - It must not run broad test suites unless needed for the changed files.
+- It should normally finish with one child agent, one small patch, and one
+  targeted verification pass. Keep default validation to the smallest relevant
+  commands; do not run a full project quality gate for a skill text patch.
 - For non-code tasks, do not run pytest, mypy, or ruff unless the user asked or
   the task touches Python code.
 - Completion requires `RUN/lite-summary.md` with changed files, verification,
@@ -329,6 +341,9 @@ Rules:
 - It must not create `RUN/doc/detailed-design.md`, `RUN/doc/tasks/*`,
   `RUN/doc/prompt.md`, `RUN/spec.md`, or `RUN/plan/task-NNN/task.md`.
 - It should implement in one to three small steps, verifying after each step.
+- It should normally use no more than five role invocations total:
+  proposal-writer, proposal-reviewer, design-writer, design-reviewer, and
+  standard-executor. If that is not enough, stop and ask whether to promote.
 - It may run targeted tests and quality checks relevant to changed files. It
   runs full pytest/mypy/ruff only when Python code changes require that level
   of confidence or the user explicitly asks.

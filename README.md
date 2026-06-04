@@ -15,10 +15,11 @@ skills/superhua/
 Easy-Vibe-style task router before execution, so small tasks do not pay the full
 Spec Coding cost. Every run starts by choosing one mode:
 
-- `vibe-lite`: clear, low-risk work with one executor and targeted
-  verification.
+- `vibe-lite`: clear, bounded work with one executor and targeted verification,
+  including known small skill-maintenance patches.
 - `vibe-standard`: moderate work with proposal/design alignment, then one
-  bounded executor.
+  bounded executor, only when user intent, workflow shape, or acceptance
+  criteria need agreement.
 - `spec-full`: the original full Superteam-compatible chain for complex,
   risky, multi-module, production, research-heavy, or explicitly full tasks.
 

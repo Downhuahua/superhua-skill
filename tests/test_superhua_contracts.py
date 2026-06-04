@@ -124,6 +124,27 @@ def test_mode_markers_remain_in_skill_and_workflow_contracts() -> None:
         assert mode in workflow
 
 
+def test_router_keeps_known_skill_patches_lightweight() -> None:
+    skill = _read(SOURCE_SKILL / "SKILL.md")
+    workflow = _read(SOURCE_SKILL / "references" / "workflow.md")
+    router = _read(SOURCE_SKILL / "agents" / "task-router.md")
+    readme = _read(README)
+
+    for text in [skill, router]:
+        assert "bounded skill-maintenance patches" in text
+        assert re.search(r"up to\s+five", text)
+        assert re.search(
+            r"Do not route a skill update\s+to `vibe-standard` solely",
+            text,
+        )
+        assert "半小时" in text
+        assert "别跑重流程" in text
+
+    assert "default for known small skill-maintenance patches" in workflow
+    assert "one child agent, one small patch, and one targeted verification" in workflow
+    assert "known small skill-maintenance patches" in readme
+
+
 def test_spec_writer_has_deterministic_blocking_output_contract() -> None:
     text = _read(SOURCE_SKILL / "agents" / "spec-writer.md")
 
