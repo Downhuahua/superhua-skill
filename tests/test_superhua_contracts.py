@@ -48,6 +48,23 @@ REQUIRED_UPSTREAM_PATHS = [
     "references/upstream-superteam/agents/code-reviewer.md",
 ]
 
+HARNESS_PATTERNS = [
+    "pipeline",
+    "fan-out-fan-in",
+    "expert-pool",
+    "producer-reviewer",
+    "supervisor",
+    "hierarchical",
+    "none",
+]
+
+INVOCATION_STRATEGIES = [
+    "single-agent",
+    "parallel-subagents",
+    "serial-review-loop",
+    "full-superteam",
+]
+
 
 def _read(path: Path) -> str:
     return path.read_text(encoding="utf-8")
@@ -143,6 +160,32 @@ def test_router_keeps_known_skill_patches_lightweight() -> None:
     assert "default for known small skill-maintenance patches" in workflow
     assert "one child agent, one small patch, and one targeted verification" in workflow
     assert "known small skill-maintenance patches" in readme
+
+
+def test_harness_architecture_selector_contract_exists() -> None:
+    skill = _read(SOURCE_SKILL / "SKILL.md")
+    workflow = _read(SOURCE_SKILL / "references" / "workflow.md")
+    router = _read(SOURCE_SKILL / "agents" / "task-router.md")
+    readme = _read(README)
+    adaptation_path = SOURCE_SKILL / "references" / "harness-adaptation.md"
+    adaptation = _read(adaptation_path)
+
+    assert adaptation_path.is_file()
+    for text in [skill, workflow, router, readme, adaptation]:
+        assert "Harness pattern" in text
+        assert "Invocation strategy" in text
+
+    for pattern in HARNESS_PATTERNS:
+        assert pattern in adaptation
+        assert pattern in router
+
+    for strategy in INVOCATION_STRATEGIES:
+        assert strategy in adaptation
+        assert strategy in router
+
+    assert "Known issue, known files, known checks" in adaptation
+    assert "Do not import Harness's full team mode by" in adaptation
+    assert "does not import Harness's full team mode by" in workflow
 
 
 def test_spec_writer_has_deterministic_blocking_output_contract() -> None:

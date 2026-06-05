@@ -12,8 +12,9 @@ skills/superhua/
 
 `superhua` is a Codex-local adaptation of
 [abadcafe/superteam](https://github.com/abadcafe/superteam). It now adds an
-Easy-Vibe-style task router before execution, so small tasks do not pay the full
-Spec Coding cost. Every run starts by choosing one mode:
+Easy-Vibe-style task router plus a Harness-inspired architecture selector before
+execution, so small tasks do not pay the full Spec Coding cost. Every run
+starts by choosing one mode:
 
 - `vibe-lite`: clear, bounded work with one executor and targeted verification,
   including known small skill-maintenance patches.
@@ -22,6 +23,12 @@ Spec Coding cost. Every run starts by choosing one mode:
   criteria need agreement.
 - `spec-full`: the original full Superteam-compatible chain for complex,
   risky, multi-module, production, research-heavy, or explicitly full tasks.
+
+Stage 0 also records a lightweight Harness mapping in `RUN/task-profile.md`:
+`Harness pattern` and `Invocation strategy`. This lets SuperHUA distinguish
+direct execution, expert-pool selection, producer-reviewer loops, bounded
+fan-out/fan-in checks, and full Superteam execution without defaulting every
+task into a heavy team workflow.
 
 The full `spec-full` flow still turns a manual VibeCoding preparation flow into
 a run-scoped automation without dropping the human judgment gates:

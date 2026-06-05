@@ -6,7 +6,8 @@ description: Use when the user asks to use SuperHUA/superhua or continue a Super
 # SuperHUA
 
 SuperHUA is a Codex-local adaptation of `abadcafe/superteam` with
-Easy-Vibe-style task routing. It preserves the original Superteam
+Easy-Vibe-style task routing and a Harness-inspired architecture selector. It
+preserves the original Superteam
 state-machine discipline, fresh-agent execution, review loops, and
 `Status: Pending` convergence model for work that actually needs it, while
 keeping small tasks out of the full six-stage path.
@@ -159,7 +160,8 @@ NEVER:
 Mode and routing:
 
 - `RUN/task-profile.md`: router output with selected mode, confidence, evidence
-  cap, risk level, verification plan, and reason.
+  cap, risk level, verification plan, Harness pattern, invocation strategy, and
+  reason.
 - `RUN/mode.md`: controller-owned copy of the selected mode.
 - `RUN/questions/router-questions.md`
 
@@ -280,6 +282,27 @@ Rules:
     `spec-full`.
 - If explicit mode conflicts with risk, choose the safer mode and explain the
   reason in `RUN/task-profile.md`.
+- Use `references/harness-adaptation.md` when deciding whether the task is a
+  direct executor job, an expert-pool selection, a producer-reviewer loop,
+  bounded fan-out/fan-in, or full Superteam execution.
+- `RUN/task-profile.md` must include:
+  - `Harness pattern: pipeline|fan-out-fan-in|expert-pool|producer-reviewer|supervisor|hierarchical|none`
+  - `Invocation strategy: single-agent|parallel-subagents|serial-review-loop|full-superteam`
+
+Phase 0 audit matrix:
+
+- Known issue, known files, known checks -> `vibe-lite`, `expert-pool`,
+  `single-agent`.
+- Small skill or documentation maintenance -> `vibe-lite`, `expert-pool`,
+  `single-agent`.
+- One artifact with meaningful objective review -> `vibe-lite`,
+  `producer-reviewer`, `serial-review-loop` only when review is necessary.
+- Independent inspection from several viewpoints -> capped `vibe-lite` or
+  `vibe-standard`, `fan-out-fan-in`, `parallel-subagents`.
+- Requirements, architecture, or acceptance criteria need user alignment ->
+  `vibe-standard`, `pipeline`, `serial-review-loop`.
+- Multi-module implementation, dynamic task distribution, or long-running
+  automation -> `spec-full`, `pipeline` or `supervisor`, `full-superteam`.
 
 Routing rules:
 

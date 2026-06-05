@@ -83,6 +83,36 @@ Research tasks default to capped execution. Set a concrete `Evidence Cap`,
 normally 10-20 accepted records, unless the user explicitly asks for deep
 research.
 
+## Harness Architecture Rules
+
+Also select one Harness-inspired pattern and one invocation strategy. Use
+`references/harness-adaptation.md` as the source of truth for this mapping.
+
+Patterns:
+
+- `pipeline`: sequential dependent stages.
+- `fan-out-fan-in`: independent parallel viewpoints followed by bounded
+  integration.
+- `expert-pool`: choose one specialist for the input. Prefer this for known
+  small skill-maintenance patches.
+- `producer-reviewer`: generate one artifact and review it when review catches
+  meaningful risk.
+- `supervisor`: dynamic large task distribution. Use only with `spec-full`.
+- `hierarchical`: recursive delegation. Avoid unless explicitly justified.
+- `none`: direct execution is cheaper than a named architecture.
+
+Invocation strategies:
+
+- `single-agent`: one executor plus targeted verification. Default for
+  `vibe-lite`.
+- `parallel-subagents`: independent bounded agents with disjoint scopes.
+- `serial-review-loop`: writer/reviewer or producer/reviewer loop.
+- `full-superteam`: preserved Superteam-compatible Stage 6 execution.
+
+Anti-overhead rule: do not select `serial-review-loop`, `parallel-subagents`,
+or `full-superteam` unless their coordination cost is justified in `Routing
+Reason`.
+
 ## Task Profile Format
 
 ```markdown
@@ -106,6 +136,8 @@ Confidence: high|medium|low
 - Research required: yes|no
 - Evidence cap: N|None
 - Objective verification: [tests/build/typecheck/manual check/file diff/none]
+- Harness pattern: pipeline|fan-out-fan-in|expert-pool|producer-reviewer|supervisor|hierarchical|none
+- Invocation strategy: single-agent|parallel-subagents|serial-review-loop|full-superteam
 
 ## Mode Bounds
 

@@ -21,6 +21,10 @@ Codex adaptation:
 - `vibe-standard` runs proposal/design approval and one bounded executor only
   when requirements, architecture, workflow shape, or acceptance criteria need
   alignment.
+- Stage 0 uses `references/harness-adaptation.md` as a lightweight
+  architecture selector. It records a Harness pattern and invocation strategy
+  in `RUN/task-profile.md`, but it does not import Harness's full team mode by
+  default.
 - `spec-full` uses upstream Superteam planning/execution as the internal
   engine.
 - Commits are not made unless the user asks.
@@ -486,7 +490,9 @@ NEVER:
 5. Read `RUN/task-profile.md`.
 6. Write `RUN/mode.md` with exactly one mode: `vibe-lite`, `vibe-standard`, or
    `spec-full`.
-7. Continue to the selected mode.
+7. Require `RUN/task-profile.md` to include `Harness pattern:` and
+   `Invocation strategy:` fields.
+8. Continue to the selected mode.
 
 ### Lite Flow
 
