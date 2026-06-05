@@ -130,6 +130,9 @@ Dispatch means:
 - Use the available subagent or multi-agent facility for one fresh agent per
   role invocation.
 - Pass only the exact prompt format from `references/workflow.md`.
+- Resolve `<installed SuperHUA skill root>` in prompt formats to the directory
+  containing the currently loaded SuperHUA `SKILL.md` before dispatch. Do not
+  hard-code a user-specific installation path.
 - Do not add chat summaries, advice, inferred requirements, or hidden context.
 - Do not reuse the same child agent across different roles or stages.
 - Wait for the required output files, then inspect files rather than chat text.

@@ -100,7 +100,7 @@ def test_workflow_prompt_file_references_exist_in_source_and_install() -> None:
     refs = sorted(
         set(
             re.findall(
-                r"Prompt file: C:/Users/HUA/\.codex/skills/superhua/(agents/[^\s`]+)",
+                r"Prompt file: <installed SuperHUA skill root>/(agents/[^\s`]+)",
                 workflow,
             )
         )
@@ -186,6 +186,19 @@ def test_harness_architecture_selector_contract_exists() -> None:
     assert "Known issue, known files, known checks" in adaptation
     assert "Do not import Harness's full team mode by" in adaptation
     assert "does not import Harness's full team mode by" in workflow
+
+
+def test_checked_in_skill_has_no_user_specific_install_paths() -> None:
+    checked_files = [
+        path
+        for path in SOURCE_SKILL.rglob("*")
+        if path.is_file() and path.suffix in {".md", ".yaml", ".yml"}
+    ]
+
+    for path in checked_files:
+        text = _read(path)
+        assert "C:/Users/HUA" not in text, path
+        assert "C:\\Users\\HUA" not in text, path
 
 
 def test_spec_writer_has_deterministic_blocking_output_contract() -> None:

@@ -128,6 +128,10 @@ metadata. Do not include summaries, advice, copied requirements, or chat
 history. The fresh agent must read files from disk. In the templates below,
 replace `RUN` with the concrete selected run directory, for example
 `working/superhua-runs/20260602-1430-3-2-refactor`.
+Resolve `<installed SuperHUA skill root>` to the installed directory that
+contains the active SuperHUA `SKILL.md`, for example
+`$CODEX_HOME/skills/superhua`. Do not replace it with a checked-in,
+user-specific absolute path.
 
 Before dispatching an agent, the controller creates parent directories for every
 run-scoped output path in that agent's prompt. The dispatched agent must also
@@ -157,7 +161,7 @@ Dispatch means:
 ### task-router
 
 ```text
-- Prompt file: C:/Users/HUA/.codex/skills/superhua/agents/task-router.md
+- Prompt file: <installed SuperHUA skill root>/agents/task-router.md
 - Run id: <run-id>
 - Run directory: RUN
 - User input path: RUN/user-input.md
@@ -168,7 +172,7 @@ Dispatch means:
 ### lite-executor
 
 ```text
-- Prompt file: C:/Users/HUA/.codex/skills/superhua/agents/lite-executor.md
+- Prompt file: <installed SuperHUA skill root>/agents/lite-executor.md
 - Run id: <run-id>
 - Run directory: RUN
 - User input path: RUN/user-input.md
@@ -182,7 +186,7 @@ Dispatch means:
 ### standard-executor
 
 ```text
-- Prompt file: C:/Users/HUA/.codex/skills/superhua/agents/standard-executor.md
+- Prompt file: <installed SuperHUA skill root>/agents/standard-executor.md
 - Run id: <run-id>
 - Run directory: RUN
 - User input path: RUN/user-input.md
@@ -198,7 +202,7 @@ Dispatch means:
 ### proposal-writer
 
 ```text
-- Prompt file: C:/Users/HUA/.codex/skills/superhua/agents/proposal-writer.md
+- Prompt file: <installed SuperHUA skill root>/agents/proposal-writer.md
 - Run id: <run-id>
 - Run directory: RUN
 - User input path: RUN/user-input.md
@@ -210,7 +214,7 @@ Dispatch means:
 ### proposal-reviewer
 
 ```text
-- Prompt file: C:/Users/HUA/.codex/skills/superhua/agents/proposal-reviewer.md
+- Prompt file: <installed SuperHUA skill root>/agents/proposal-reviewer.md
 - Run id: <run-id>
 - Run directory: RUN
 - User input path: RUN/user-input.md
@@ -221,7 +225,7 @@ Dispatch means:
 ### design-writer
 
 ```text
-- Prompt file: C:/Users/HUA/.codex/skills/superhua/agents/design-writer.md
+- Prompt file: <installed SuperHUA skill root>/agents/design-writer.md
 - Run id: <run-id>
 - Run directory: RUN
 - User input path: RUN/user-input.md
@@ -234,7 +238,7 @@ Dispatch means:
 ### design-reviewer
 
 ```text
-- Prompt file: C:/Users/HUA/.codex/skills/superhua/agents/design-reviewer.md
+- Prompt file: <installed SuperHUA skill root>/agents/design-reviewer.md
 - Run id: <run-id>
 - Run directory: RUN
 - Proposal path: RUN/doc/proposal.md
@@ -245,7 +249,7 @@ Dispatch means:
 ### detailed-design-writer
 
 ```text
-- Prompt file: C:/Users/HUA/.codex/skills/superhua/agents/detailed-design-writer.md
+- Prompt file: <installed SuperHUA skill root>/agents/detailed-design-writer.md
 - Run id: <run-id>
 - Run directory: RUN
 - User input path: RUN/user-input.md
@@ -259,7 +263,7 @@ Dispatch means:
 ### detailed-design-reviewer
 
 ```text
-- Prompt file: C:/Users/HUA/.codex/skills/superhua/agents/detailed-design-reviewer.md
+- Prompt file: <installed SuperHUA skill root>/agents/detailed-design-reviewer.md
 - Run id: <run-id>
 - Run directory: RUN
 - Proposal path: RUN/doc/proposal.md
@@ -271,7 +275,7 @@ Dispatch means:
 ### task-writer
 
 ```text
-- Prompt file: C:/Users/HUA/.codex/skills/superhua/agents/task-writer.md
+- Prompt file: <installed SuperHUA skill root>/agents/task-writer.md
 - Run id: <run-id>
 - Run directory: RUN
 - User input path: RUN/user-input.md
@@ -287,7 +291,7 @@ Dispatch means:
 ### task-reviewer
 
 ```text
-- Prompt file: C:/Users/HUA/.codex/skills/superhua/agents/task-reviewer.md
+- Prompt file: <installed SuperHUA skill root>/agents/task-reviewer.md
 - Run id: <run-id>
 - Run directory: RUN
 - Proposal path: RUN/doc/proposal.md
@@ -301,7 +305,7 @@ Dispatch means:
 ### prompt-writer
 
 ```text
-- Prompt file: C:/Users/HUA/.codex/skills/superhua/agents/prompt-writer.md
+- Prompt file: <installed SuperHUA skill root>/agents/prompt-writer.md
 - Run id: <run-id>
 - Run directory: RUN
 - User input path: RUN/user-input.md
@@ -318,7 +322,7 @@ Dispatch means:
 ### prompt-reviewer
 
 ```text
-- Prompt file: C:/Users/HUA/.codex/skills/superhua/agents/prompt-reviewer.md
+- Prompt file: <installed SuperHUA skill root>/agents/prompt-reviewer.md
 - Run id: <run-id>
 - Run directory: RUN
 - Proposal path: RUN/doc/proposal.md
@@ -333,7 +337,7 @@ Dispatch means:
 ### spec-writer
 
 ```text
-- Prompt file: C:/Users/HUA/.codex/skills/superhua/agents/spec-writer.md
+- Prompt file: <installed SuperHUA skill root>/agents/spec-writer.md
 - Run id: <run-id>
 - Run directory: RUN
 - Proposal path: RUN/doc/proposal.md
@@ -349,11 +353,11 @@ Dispatch means:
 ### planner
 
 ```text
-- Prompt file: C:/Users/HUA/.codex/skills/superhua/agents/planner.md
-- Upstream contract path: C:/Users/HUA/.codex/skills/superhua/references/upstream-superteam/agents/planner.md
-- Upstream planning skill path: C:/Users/HUA/.codex/skills/superhua/references/upstream-superteam/skills/planning/SKILL.md
-- Upstream black-box testing path: C:/Users/HUA/.codex/skills/superhua/references/upstream-superteam/skills/black-box-testing/SKILL.md
-- Upstream issue handling path: C:/Users/HUA/.codex/skills/superhua/references/upstream-superteam/skills/hands-off-issue-handling/SKILL.md
+- Prompt file: <installed SuperHUA skill root>/agents/planner.md
+- Upstream contract path: <installed SuperHUA skill root>/references/upstream-superteam/agents/planner.md
+- Upstream planning skill path: <installed SuperHUA skill root>/references/upstream-superteam/skills/planning/SKILL.md
+- Upstream black-box testing path: <installed SuperHUA skill root>/references/upstream-superteam/skills/black-box-testing/SKILL.md
+- Upstream issue handling path: <installed SuperHUA skill root>/references/upstream-superteam/skills/hands-off-issue-handling/SKILL.md
 - Run id: <run-id>
 - Run directory: RUN
 - Proposal path: RUN/doc/proposal.md
@@ -372,10 +376,10 @@ Dispatch means:
 ### plan-reviewer
 
 ```text
-- Prompt file: C:/Users/HUA/.codex/skills/superhua/agents/plan-reviewer.md
-- Upstream contract path: C:/Users/HUA/.codex/skills/superhua/references/upstream-superteam/agents/plan-reviewer.md
-- Upstream planning skill path: C:/Users/HUA/.codex/skills/superhua/references/upstream-superteam/skills/planning/SKILL.md
-- Upstream black-box testing path: C:/Users/HUA/.codex/skills/superhua/references/upstream-superteam/skills/black-box-testing/SKILL.md
+- Prompt file: <installed SuperHUA skill root>/agents/plan-reviewer.md
+- Upstream contract path: <installed SuperHUA skill root>/references/upstream-superteam/agents/plan-reviewer.md
+- Upstream planning skill path: <installed SuperHUA skill root>/references/upstream-superteam/skills/planning/SKILL.md
+- Upstream black-box testing path: <installed SuperHUA skill root>/references/upstream-superteam/skills/black-box-testing/SKILL.md
 - Run id: <run-id>
 - Run directory: RUN
 - Proposal path: RUN/doc/proposal.md
@@ -393,11 +397,11 @@ Dispatch means:
 ### implementer
 
 ```text
-- Prompt file: C:/Users/HUA/.codex/skills/superhua/agents/implementer.md
-- Upstream contract path: C:/Users/HUA/.codex/skills/superhua/references/upstream-superteam/agents/implementer.md
-- Upstream executing skill path: C:/Users/HUA/.codex/skills/superhua/references/upstream-superteam/skills/executing/SKILL.md
-- Upstream black-box testing path: C:/Users/HUA/.codex/skills/superhua/references/upstream-superteam/skills/black-box-testing/SKILL.md
-- Upstream issue handling path: C:/Users/HUA/.codex/skills/superhua/references/upstream-superteam/skills/hands-off-issue-handling/SKILL.md
+- Prompt file: <installed SuperHUA skill root>/agents/implementer.md
+- Upstream contract path: <installed SuperHUA skill root>/references/upstream-superteam/agents/implementer.md
+- Upstream executing skill path: <installed SuperHUA skill root>/references/upstream-superteam/skills/executing/SKILL.md
+- Upstream black-box testing path: <installed SuperHUA skill root>/references/upstream-superteam/skills/black-box-testing/SKILL.md
+- Upstream issue handling path: <installed SuperHUA skill root>/references/upstream-superteam/skills/hands-off-issue-handling/SKILL.md
 - Run id: <run-id>
 - Run directory: RUN
 - Task number: NNN
@@ -410,10 +414,10 @@ Dispatch means:
 ### spec-reviewer
 
 ```text
-- Prompt file: C:/Users/HUA/.codex/skills/superhua/agents/spec-reviewer.md
-- Upstream contract path: C:/Users/HUA/.codex/skills/superhua/references/upstream-superteam/agents/spec-reviewer.md
-- Upstream executing skill path: C:/Users/HUA/.codex/skills/superhua/references/upstream-superteam/skills/executing/SKILL.md
-- Upstream black-box testing path: C:/Users/HUA/.codex/skills/superhua/references/upstream-superteam/skills/black-box-testing/SKILL.md
+- Prompt file: <installed SuperHUA skill root>/agents/spec-reviewer.md
+- Upstream contract path: <installed SuperHUA skill root>/references/upstream-superteam/agents/spec-reviewer.md
+- Upstream executing skill path: <installed SuperHUA skill root>/references/upstream-superteam/skills/executing/SKILL.md
+- Upstream black-box testing path: <installed SuperHUA skill root>/references/upstream-superteam/skills/black-box-testing/SKILL.md
 - Run id: <run-id>
 - Run directory: RUN
 - Task number: NNN
@@ -430,10 +434,10 @@ Dispatch means:
 ### code-reviewer
 
 ```text
-- Prompt file: C:/Users/HUA/.codex/skills/superhua/agents/code-reviewer.md
-- Upstream contract path: C:/Users/HUA/.codex/skills/superhua/references/upstream-superteam/agents/code-reviewer.md
-- Upstream executing skill path: C:/Users/HUA/.codex/skills/superhua/references/upstream-superteam/skills/executing/SKILL.md
-- Upstream black-box testing path: C:/Users/HUA/.codex/skills/superhua/references/upstream-superteam/skills/black-box-testing/SKILL.md
+- Prompt file: <installed SuperHUA skill root>/agents/code-reviewer.md
+- Upstream contract path: <installed SuperHUA skill root>/references/upstream-superteam/agents/code-reviewer.md
+- Upstream executing skill path: <installed SuperHUA skill root>/references/upstream-superteam/skills/executing/SKILL.md
+- Upstream black-box testing path: <installed SuperHUA skill root>/references/upstream-superteam/skills/black-box-testing/SKILL.md
 - Run id: <run-id>
 - Run directory: RUN
 - Task number: NNN
